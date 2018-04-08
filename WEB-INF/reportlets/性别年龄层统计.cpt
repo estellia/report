@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WorkBook xmlVersion="20141222" releaseVersion="8.0.0">
+<TableDataMap>
+<TableData name="性别年龄层统计" class="com.fr.data.impl.DBTableData">
+<Parameters>
+<Parameter>
+<Attributes name="p1"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+</Parameters>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[测试环境]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[ with temp ( dst_unit_id, src_unit_id)
+as
+(
+select dst_unit_id,src_unit_id
+from T_Unit_Relation
+where dst_unit_id = '${p1}'
+ 
+union all
+select a.dst_unit_id,a.src_unit_id
+from T_Unit_Relation a
+inner join temp on a.src_unit_id = temp.dst_unit_id
+)
+SELECT CASE WHEN age IS NULL THEN '未知'
+			  WHEN age <10 THEN '0-10岁'
+			  WHEN age >=15 AND age <20  THEN '15-20岁'
+			  WHEN age >=20 AND age <25  THEN '20-25岁'
+			  WHEN age >=25 AND age <30  THEN '25-30岁'
+			  WHEN age >=30 AND age <35  THEN '30-35岁'
+			  WHEN age >=35 AND age <40  THEN '35-40岁'
+			  WHEN age >=40 AND age <45  THEN '40-45岁'
+			  WHEN age >=45 AND age <50  THEN '45-50岁'
+			  WHEN age >=50 AND age <55  THEN '50-55岁'
+			  WHEN age >=55 AND age <60  THEN '55-60岁'
+			  ELSE '60以上'END 年龄层
+			  ,SUM(CASE WHEN Gender = 2 THEN 1 ELSE 0 END)女性会员
+			  ,SUM(CASE WHEN Gender = 1 THEN 1 ELSE 0 END)男性会员
+
+			   FROM Vip
+WHERE CouponInfo IN (SELECT dst_unit_id FROM temp)
+  
+GROUP BY CASE WHEN age IS NULL THEN '未知'
+			  WHEN age <10 THEN '0-10岁'
+			  WHEN age >=15 AND age <20  THEN '15-20岁'
+			  WHEN age >=20 AND age <25  THEN '20-25岁'
+			  WHEN age >=25 AND age <30  THEN '25-30岁'
+			  WHEN age >=30 AND age <35  THEN '30-35岁'
+			  WHEN age >=35 AND age <40  THEN '35-40岁'
+			  WHEN age >=40 AND age <45  THEN '40-45岁'
+			  WHEN age >=45 AND age <50  THEN '45-50岁'
+			  WHEN age >=50 AND age <55  THEN '50-55岁'
+			  WHEN age >=55 AND age <60  THEN '55-60岁'
+			  ELSE '60以上'END]]></Query>
+</TableData>
+</TableDataMap>
+<Report class="com.fr.report.worksheet.WorkSheet" name="sheet1">
+<ReportPageAttr>
+<HR/>
+<FR/>
+<HC/>
+<FC/>
+</ReportPageAttr>
+<ColumnPrivilegeControl/>
+<RowPrivilegeControl/>
+<RowHeight defaultValue="723900">
+<![CDATA[1296000,723900,723900,723900,723900,723900,723900,723900,723900,723900,723900]]></RowHeight>
+<ColumnWidth defaultValue="2743200">
+<![CDATA[2743200,3162300,2743200,2743200,4076700,2743200,2743200,2743200,2743200,2743200,2743200]]></ColumnWidth>
+<CellElementList>
+<C c="0" r="0" cs="5" s="0">
+<O>
+<![CDATA[性别年龄层统计]]></O>
+<PrivilegeControl/>
+<CellGUIAttr/>
+<CellPageAttr/>
+<Expand/>
+</C>
+<C c="0" r="1" s="1">
+<O>
+<![CDATA[年龄层]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="1" s="1">
+<O>
+<![CDATA[女性会员]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="2" r="1" s="1">
+<O>
+<![CDATA[男性会员]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="3" r="1" s="1">
+<O>
+<![CDATA[合计]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="4" r="1" s="1">
+<O>
+<![CDATA[占比]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="0" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="性别年龄层统计" columnName="年龄层"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="1" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="性别年龄层统计" columnName="女性会员"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="2" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="性别年龄层统计" columnName="男性会员"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="3" r="2" s="2">
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=B3 + C3]]></Attributes>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="4" r="2" s="2">
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=((D3 / SUM(D3)) * 100) + '%']]></Attributes>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+</CellElementList>
+<ReportAttrSet>
+<ReportSettings headerHeight="0" footerHeight="0">
+<PaperSetting>
+<Margin top="0" left="0" bottom="986400" right="2743200"/>
+</PaperSetting>
+</ReportSettings>
+<Header reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Header>
+<Footer reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Footer>
+</ReportAttrSet>
+<PrivilegeControl/>
+</Report>
+<ReportParameterAttr>
+<Attributes showWindow="true" delayPlaying="true" windowPosition="1" align="0"/>
+<PWTitle>
+<![CDATA[参数]]></PWTitle>
+<ParameterUI class="com.fr.form.main.parameter.FormParameterUI">
+<Layout class="com.fr.form.ui.container.WParameterLayout">
+<WidgetName name="para"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Margin top="1" left="1" bottom="1" right="1"/>
+<Border>
+<border style="0" color="-723724" type="0" borderStyle="0"/>
+<WidgetTitle>
+<O>
+<![CDATA[新建标题]]></O>
+<FRFont name="SimSun" style="0" size="72"/>
+<Position pos="0"/>
+</WidgetTitle>
+<Alpha alpha="1.0"/>
+</Border>
+<Background name="ColorBackground" color="-1118482"/>
+<LCAttr vgap="0" hgap="0" compInterval="0"/>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="Labelp1"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[门店:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="50" y="25" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.TreeComboBoxEditor">
+<WidgetName name="p1"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<EMSG>
+<![CDATA[门店不能为空]]></EMSG>
+<allowBlank>
+<![CDATA[false]]></allowBlank>
+<TreeAttr selectLeafOnly="false"/>
+<isAutoBuild autoBuild="false"/>
+<Dictionary class="com.fr.data.impl.TableDataDictionary">
+<FormulaDictAttr kiName="UnitID" viName="UnitName"/>
+<TableDataDictAttr>
+<TableData class="com.fr.data.impl.NameTableData">
+<Name>
+<![CDATA[门店树形]]></Name>
+</TableData>
+</TableDataDictAttr>
+</Dictionary>
+<widgetValue>
+<O>
+<![CDATA[]]></O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="130" y="25" width="158" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.parameter.FormSubmitButton">
+<WidgetName name="Search"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Text>
+<![CDATA[查询]]></Text>
+<Hotkeys>
+<![CDATA[enter]]></Hotkeys>
+</InnerWidget>
+<BoundsAttr x="378" y="25" width="80" height="21"/>
+</Widget>
+<Sorted sorted="false"/>
+<Display display="true"/>
+<DelayDisplayContent delay="true"/>
+<Position position="0"/>
+<Design_Width design_width="960"/>
+<MobileWidgetList>
+<Widget widgetName="p1"/>
+</MobileWidgetList>
+<WidgetNameTagMap>
+<NameTag name="p1" tag="门店:"/>
+</WidgetNameTagMap>
+</Layout>
+<DesignAttr width="960" height="80"/>
+</ParameterUI>
+</ReportParameterAttr>
+<StyleList>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="1" size="120" foreground="-15442262"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Top style="5" color="-16691294"/>
+<Bottom style="2" color="-4144960"/>
+</Border>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="1" size="72"/>
+<Background name="NullBackground"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="0" size="72"/>
+<Background name="ColorBackground" color="-2691073"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+</StyleList>
+<DesignerVersion DesignerVersion="IAA"/>
+<PreviewType PreviewType="0"/>
+</WorkBook>

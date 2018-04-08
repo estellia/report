@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WorkBook xmlVersion="20141222" releaseVersion="8.0.0">
+<TableDataMap>
+<TableData name="ds1" class="com.fr.data.impl.DBTableData">
+<Parameters/>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[测试环境]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[
+WITH CTE AS(
+SELECT CAST(order_date AS DATE)  AS Order_Date
+	  ,SUM(actual_amount) AS actual_amount
+	  ,SUM(actual_amount)/COUNT(distinct Vip_No) AS Price_Per_Vip
+	  
+ FROM t_inout 
+GROUP BY CAST(order_date AS DATE) )
+SELECT * FROM (
+SELECT A.Order_Date
+	  ,A.actual_amount
+	  ,B.actual_amount as Yester_actual_amount
+	  ,a.Price_Per_Vip
+	  ,SUM(C.actual_amount) AS Montly_actual_amount
+	  ,200000 AS Monthly_Target
+FROM CTE A
+LEFT JOIN CTE B
+ON A.order_date = DATEADD(DAY,1,B.order_date)
+LEFT JOIN CTE C
+ON YEAR(A.order_date) = YEAR(C.order_date)
+AND MONTH(A.order_date) = MONTH(C.order_date)
+AND A.order_date >= C.order_date
+GROUP BY A.Order_Date
+	  ,A.actual_amount
+	  ,B.actual_amount 
+	  ,a.Price_Per_Vip) T
+WHERE order_date = CAST(DATEADD(DAY,-1,GETDATE()) AS DATE)
+order by 1]]></Query>
+</TableData>
+</TableDataMap>
+<Report class="com.fr.report.worksheet.WorkSheet" name="sheet1">
+<ReportPageAttr>
+<HR/>
+<FR/>
+<HC/>
+<FC/>
+</ReportPageAttr>
+<ColumnPrivilegeControl/>
+<RowPrivilegeControl/>
+<RowHeight defaultValue="723900">
+<![CDATA[723900,1152000,1152000,1152000,1152000,1152000,723900,723900,723900,723900,723900]]></RowHeight>
+<ColumnWidth defaultValue="2743200">
+<![CDATA[2743200,4266720,4267200,2743200,2743200,2743200,2743200,2743200,2743200,2743200,2743200]]></ColumnWidth>
+<CellElementList>
+<C c="0" r="0">
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="1" s="0">
+<O>
+<![CDATA[当日实际业绩：]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="2" r="1" s="1">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="actual_amount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="2" s="0">
+<O>
+<![CDATA[昨日业绩：]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="2" r="2" s="1">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="Yester_actual_amount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="1" r="3" s="0">
+<O>
+<![CDATA[月度业绩累积：]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="2" r="3" s="1">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="Montly_actual_amount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="1" r="4" s="0">
+<O>
+<![CDATA[客单价：]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="2" r="4" s="1">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="Price_Per_Vip"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="1" r="5" s="0">
+<O>
+<![CDATA[连带率：]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="2" r="5" s="2">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="连带率"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+</CellElementList>
+<ReportAttrSet>
+<ReportSettings headerHeight="0" footerHeight="0">
+<PaperSetting/>
+</ReportSettings>
+<Header reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Header>
+<Footer reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Footer>
+</ReportAttrSet>
+<PrivilegeControl/>
+</Report>
+<ReportParameterAttr>
+<Attributes showWindow="true" delayPlaying="true" windowPosition="1" align="0"/>
+<PWTitle>
+<![CDATA[参数]]></PWTitle>
+</ReportParameterAttr>
+<StyleList>
+<Style horizontal_alignment="4" imageLayout="1">
+<FRFont name="SimSun" style="1" size="80" foreground="-4144960"/>
+<Background name="NullBackground"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<Format class="com.fr.base.CoreDecimalFormat">
+<![CDATA[#0]]></Format>
+<FRFont name="SimSun" style="1" size="88" foreground="-16724737"/>
+<Background name="NullBackground"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<Format class="com.fr.base.CoreDecimalFormat">
+<![CDATA[#0.00]]></Format>
+<FRFont name="SimSun" style="1" size="88" foreground="-16724737"/>
+<Background name="NullBackground"/>
+<Border/>
+</Style>
+</StyleList>
+<DesignerVersion DesignerVersion="IAA"/>
+<PreviewType PreviewType="0"/>
+</WorkBook>

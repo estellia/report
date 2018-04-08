@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WorkBook xmlVersion="20141222" releaseVersion="8.0.0">
+<TableDataMap>
+<TableData name="数据库查询1" class="com.fr.data.impl.DBTableData">
+<Parameters>
+<Parameter>
+<Attributes name="p1"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="p2"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+</Parameters>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[阿里云SqlServer]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[declare @UnitName nvarchar(50)
+declare @UnitId nvarchar(50)
+
+select @UnitId=a.unit_id,@UnitName=b.unit_name
+from [dbo]A.[T_User_Role]A a
+     join t_unit b on a.unit_id = b.unit_id
+where user_id = '4734F04F-BEA6-46AE-96A1-6D2A65A46744'
+
+
+SELECT CAST(A.MembershipTime AS DATE) AS Membership_Date
+	  ,count(distinct A.VipCardCode) AS SalesCard_Count
+	  ,SUM(ISNULL(CAST(A.SalesAmount AS DECIMAL),0)) AS SalesAmount
+	  ,(SELECT SUM(TransAmount) 
+		FROM VipCardTransLog VCT
+		INNER JOIN t_unit B
+		ON VCT.UnitCode = B.unit_code
+		WHERE [TransAction]A = 'ADDC'
+		  AND CAST(TransTime AS DATE) BETWEEN '${p1}' AND '${p2}' 
+		  AND B.unit_id = @UnitId
+		GROUP BY CAST(TransTime AS DATE)) AS 充值总额
+	  ,(SELECT SUM(Total_Amount) FROM T_Payment_detail D 
+			INNER JOIN t_unit B
+				    ON D.UnitCode = B.unit_code
+			LEFT JOIN VipCardTransLog E
+			        ON D.Inout_Id = E.BillNo
+			      AND D.UnitCode = E.UnitCode
+				WHERE D.Payment_Type_Name IN ('C充值卡','C儲值卡') 
+				  AND CAST(E.TransTime AS DATE)  BETWEEN '${p1}' AND '${p2}' 
+				  AND B.unit_id = @UnitId
+				  
+				) AS 储值消费总额
+	  ,(SELECT SUM(Total_Amount) * 20 FROM T_Payment_detail D 
+	  		INNER JOIN t_unit B
+			       ON D.UnitCode = B.unit_code
+			LEFT JOIN VipCardTransLog E
+			       ON D.Inout_Id = E.BillNo
+			      AND D.UnitCode = E.UnitCode
+				WHERE D.Payment_Type_Name IN ('Z積分') 
+				  AND CAST(E.TransTime AS DATE)  BETWEEN '${p1}' AND '${p2}' 
+				  AND B.unit_id = @UnitId
+				) AS 积分抵扣总数		
+	  ,(SELECT SUM(Total_Amount) FROM T_Payment_detail D 
+	  		INNER JOIN t_unit B
+			       ON D.UnitCode = B.unit_code
+			LEFT JOIN VipCardTransLog E
+			       ON D.Inout_Id = E.BillNo
+			      AND D.UnitCode = E.UnitCode
+				WHERE D.Payment_Type_Name IN ('Z積分') 
+				  AND CAST(E.TransTime AS DATE)  BETWEEN '${p1}' AND '${p2}' 
+				  AND B.unit_id = @UnitId
+				)  积分抵扣金额		
+								
+FROM VipCard A
+WHERE CAST(A.MembershipTime AS DATE) BETWEEN '${p1}' AND '${p2}' 
+  AND A.MembershipUnit = @UnitId
+GROUP BY CAST(A.MembershipTime AS DATE) ]]></Query>
+</TableData>
+</TableDataMap>
+<Report class="com.fr.report.worksheet.WorkSheet" name="sheet1">
+<ReportPageAttr>
+<HR/>
+<FR/>
+<HC/>
+<FC/>
+</ReportPageAttr>
+<ColumnPrivilegeControl/>
+<RowPrivilegeControl/>
+<RowHeight defaultValue="723900">
+<![CDATA[1296000,722880,723900,723900,723900,723900,723900,723900,723900,723900,723900]]></RowHeight>
+<ColumnWidth defaultValue="2743200">
+<![CDATA[2743200,5334000,2743200,2743200,3810000,3848100,4038600,2743200,2743200,2743200,2743200]]></ColumnWidth>
+<CellElementList>
+<C c="0" r="0" cs="7" s="0">
+<O>
+<![CDATA[门店日结对账统计]]></O>
+<PrivilegeControl/>
+<CellGUIAttr/>
+<CellPageAttr/>
+<Expand/>
+</C>
+<C c="0" r="1" s="1">
+<O>
+<![CDATA[售卡日期]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="1" s="1">
+<O>
+<![CDATA[售卡张数（含赠卡）]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="2" r="1" s="1">
+<O>
+<![CDATA[售卡总额]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="3" r="1" s="1">
+<O>
+<![CDATA[充值总额]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="4" r="1" s="1">
+<O>
+<![CDATA[储值消费总额]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="5" r="1" s="1">
+<O>
+<![CDATA[积分抵扣总数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="6" r="1" s="1">
+<O>
+<![CDATA[积分抵扣金额]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="0" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="数据库查询1" columnName="Membership_Date"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="1" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="数据库查询1" columnName="SalesCard_Count"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="2" r="2" s="3">
+<O t="DSColumn">
+<Attributes dsName="数据库查询1" columnName="SalesAmount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="3" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="数据库查询1" columnName="充值总额"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="4" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="数据库查询1" columnName="储值消费总额"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="5" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="数据库查询1" columnName="积分抵扣总数"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="6" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="数据库查询1" columnName="积分抵扣金额"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+</CellElementList>
+<ReportAttrSet>
+<ReportSettings headerHeight="0" footerHeight="0">
+<PaperSetting orientation="1">
+<Margin top="986400" left="2743200" bottom="986400" right="2743200"/>
+</PaperSetting>
+</ReportSettings>
+<Header reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Header>
+<Footer reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Footer>
+</ReportAttrSet>
+<PrivilegeControl/>
+</Report>
+<ReportParameterAttr>
+<Attributes showWindow="true" delayPlaying="true" windowPosition="1" align="0"/>
+<PWTitle>
+<![CDATA[参数]]></PWTitle>
+<ParameterUI class="com.fr.form.main.parameter.FormParameterUI">
+<Layout class="com.fr.form.ui.container.WParameterLayout">
+<WidgetName name="para"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Margin top="1" left="1" bottom="1" right="1"/>
+<Border>
+<border style="0" color="-723724" type="0" borderStyle="0"/>
+<WidgetTitle>
+<O>
+<![CDATA[新建标题]]></O>
+<FRFont name="SimSun" style="0" size="72"/>
+<Position pos="0"/>
+</WidgetTitle>
+<Alpha alpha="1.0"/>
+</Border>
+<Background name="ColorBackground" color="-1118482"/>
+<LCAttr vgap="0" hgap="0" compInterval="0"/>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="Labelp1"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[开始日期:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="50" y="25" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.DateEditor">
+<WidgetName name="p1"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<DateAttr/>
+<widgetValue>
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=DATEDELTA(today(),-30)]]></Attributes>
+</O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="130" y="25" width="95" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.parameter.FormSubmitButton">
+<WidgetName name="Search"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Text>
+<![CDATA[查询]]></Text>
+<Hotkeys>
+<![CDATA[enter]]></Hotkeys>
+</InnerWidget>
+<BoundsAttr x="510" y="25" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="Labelp2"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[至:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="225" y="25" width="61" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.DateEditor">
+<WidgetName name="p2"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<DateAttr/>
+<widgetValue>
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=today()]]></Attributes>
+</O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="286" y="25" width="107" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="Labelp3"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[门店:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="50" y="70" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="p3"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=$p3]]></Attributes>
+</O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="130" y="70" width="156" height="21"/>
+</Widget>
+<Sorted sorted="false"/>
+<Display display="true"/>
+<DelayDisplayContent delay="true"/>
+<Position position="0"/>
+<Design_Width design_width="960"/>
+<MobileWidgetList>
+<Widget widgetName="p1"/>
+<Widget widgetName="p2"/>
+</MobileWidgetList>
+<WidgetNameTagMap>
+<NameTag name="p1" tag="开始日期:"/>
+<NameTag name="p2" tag="至:"/>
+</WidgetNameTagMap>
+</Layout>
+<DesignAttr width="960" height="116"/>
+</ParameterUI>
+<Parameter>
+<Attributes name="p1"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="p2"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="p3"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+</ReportParameterAttr>
+<StyleList>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="1" size="120" foreground="-15442262"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Top style="5" color="-16691294"/>
+<Bottom style="2" color="-4144960"/>
+</Border>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="0" size="88"/>
+<Background name="NullBackground"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="0" size="72"/>
+<Background name="ColorBackground" color="-2691073"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="0" size="72"/>
+<Background name="ColorBackground" color="-2691073"/>
+<Border>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+</StyleList>
+<DesignerVersion DesignerVersion="IAA"/>
+<PreviewType PreviewType="0"/>
+</WorkBook>

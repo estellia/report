@@ -1,0 +1,548 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WorkBook xmlVersion="20141222" releaseVersion="8.0.0">
+<TableDataMap>
+<TableData name="活跃会员分析" class="com.fr.data.impl.DBTableData">
+<Parameters>
+<Parameter>
+<Attributes name="UnitId"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="Year"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="Month"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+</Parameters>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[测试环境]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[with temp (dst_unit_id, src_unit_id)
+as
+(
+select dst_unit_id,src_unit_id
+from T_Unit_Relation
+where dst_unit_id = '${UnitId}'
+union all
+select a.dst_unit_id,a.src_unit_id
+from T_Unit_Relation a
+inner join temp on a.src_unit_id = temp.dst_unit_id
+)
+select * into #temp from temp
+
+declare @HeadUnitName nvarchar(50)
+declare @TypeName nvarchar(50)
+declare @CustomerId varchar(100)
+
+select @HeadUnitName=a.unit_name,@TypeName=T_Type.type_name,@CustomerId=a.customer_id
+from t_unit a join T_Type on a.type_id = T_Type.type_id 
+where a.unit_id = '${UnitId}'
+
+declare @Period varchar(15)
+select @Period = SUBSTRING(CONVERT(varchar(8),CAST('${Year}' + left('00',2-len('${Month}')) + '${Month}' + '01' as datetime),112),1,6)
+
+select 
+        @Period as Date_Code
+	  ,K1.*
+	  ,ISNULL(K2.VipCount,0) as ActiveVipCount,CAST(isnull(K2.VipCount,0)/K1.VipCount * 100 as varchar) + '%' as ActivePct
+from (
+select 
+   UnitName
+  ,VipCardTypeName
+  ,COUNT(distinct vipid) as VipCount
+from 
+(
+select 
+   u.unit_name as UnitName
+  ,svt.VipCardTypeName
+  ,a.VIPID
+from Vip a 
+   join VipCardVipMapping vm on a.VIPID = vm.VIPID
+   join vipcard vc on vm.VipCardID = vc.VipCardID
+   join SysVipCardType svt on vc.VipCardTypeID = svt.VipCardTypeID
+   join t_unit u on a.CouponInfo = u.unit_id
+where 1=1
+   and a.status = 2
+   and u.unit_id in (select dst_unit_id from #temp)
+union all
+select 
+   @HeadUnitName as UnitName
+  ,svt.VipCardTypeName
+  ,a.VIPID
+from Vip a 
+   join VipCardVipMapping vm on a.VIPID = vm.VIPID
+   join vipcard vc on vm.VipCardID = vc.VipCardID
+   join SysVipCardType svt on vc.VipCardTypeID = svt.VipCardTypeID
+where 1=1
+   and a.status = 2
+   and @TypeName = '总部'
+ ) TT
+ group by 
+   UnitName
+  ,VipCardTypeName
+)K1 left join 
+(
+ select 
+   UnitName
+  ,VipCardTypeName
+  ,COUNT(distinct vipid) as VipCount
+from 
+(
+select 
+   u.unit_name as UnitName
+  ,svt.VipCardTypeName
+  ,a.VIPID
+from Vip a 
+   join VipCardVipMapping vm on a.VIPID = vm.VIPID
+   join vipcard vc on vm.VipCardID = vc.VipCardID
+   join SysVipCardType svt on vc.VipCardTypeID = svt.VipCardTypeID
+   join t_unit u on a.CouponInfo = u.unit_id
+where 1=1
+   and a.status = 2
+   and u.unit_id in (select dst_unit_id from #temp)
+union all
+select 
+   @HeadUnitName as UnitName
+  ,svt.VipCardTypeName
+  ,a.VIPID
+from Vip a 
+   join VipCardVipMapping vm on a.VIPID = vm.VIPID
+   join vipcard vc on vm.VipCardID = vc.VipCardID
+   join SysVipCardType svt on vc.VipCardTypeID = svt.VipCardTypeID
+where 1=1
+   and a.status = 2
+   and @TypeName = '总部'
+   and a.ClientID = @CustomerId
+ ) TT
+ where 1=1
+   and exists(select 1 from t_inout where Field1=1 and create_time between DATEADD(m,-1,cast(@Period  + '01' as datetime)) and  DATEADD(d,-1, DATEADD(m,1,cast(@Period  + '01' as datetime))))
+ group by 
+   UnitName
+  ,VipCardTypeName
+)K2 on K1.UnitName = K2.UnitName and K1.VipCardTypeName = K2.VipCardTypeName
+  
+ drop table  #temp
+]]></Query>
+</TableData>
+</TableDataMap>
+<Report class="com.fr.report.worksheet.WorkSheet" name="sheet1">
+<ReportPageAttr>
+<HR/>
+<FR/>
+<HC/>
+<FC/>
+</ReportPageAttr>
+<ColumnPrivilegeControl/>
+<RowPrivilegeControl/>
+<RowHeight defaultValue="723900">
+<![CDATA[1296000,723900,723900,723900,723900,723900,723900,723900,723900,723900,723900]]></RowHeight>
+<ColumnWidth defaultValue="2743200">
+<![CDATA[2895600,6286500,4305300,3429000,3543300,4267200,2743200,2743200,2743200,2743200,2743200]]></ColumnWidth>
+<CellElementList>
+<C c="0" r="0" cs="6" s="0">
+<O>
+<![CDATA[活跃会员分析]]></O>
+<PrivilegeControl/>
+<CellGUIAttr/>
+<CellPageAttr/>
+<Expand/>
+</C>
+<C c="0" r="1" s="1">
+<O>
+<![CDATA[月份]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="1" s="1">
+<O>
+<![CDATA[门店]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="2" r="1" s="1">
+<O>
+<![CDATA[卡类型]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="3" r="1" s="1">
+<O>
+<![CDATA[会员总数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="4" r="1" s="1">
+<O>
+<![CDATA[活跃会员数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="5" r="1" s="1">
+<O>
+<![CDATA[活跃会员占比]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="0" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="活跃会员分析" columnName="Date_Code"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="1" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="活跃会员分析" columnName="UnitName"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="2" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="活跃会员分析" columnName="VipCardTypeName"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="3" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="活跃会员分析" columnName="VipCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="4" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="活跃会员分析" columnName="ActiveVipCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="5" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="活跃会员分析" columnName="ActivePct"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="0" r="3" s="3">
+<O>
+<![CDATA[总计:]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="3" s="4">
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="2" r="3" s="3">
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="3" r="3" s="3">
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=sum(d3)]]></Attributes>
+</O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="4" r="3" s="3">
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=sum(e3)]]></Attributes>
+</O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="5" r="3" s="3">
+<PrivilegeControl/>
+<Expand/>
+</C>
+</CellElementList>
+<ReportAttrSet>
+<ReportSettings headerHeight="0" footerHeight="0">
+<PaperSetting>
+<Margin top="0" left="0" bottom="986400" right="2743200"/>
+</PaperSetting>
+</ReportSettings>
+<Header reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Header>
+<Footer reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Footer>
+</ReportAttrSet>
+<PrivilegeControl/>
+</Report>
+<ReportParameterAttr>
+<Attributes showWindow="true" delayPlaying="true" windowPosition="1" align="0"/>
+<PWTitle>
+<![CDATA[参数]]></PWTitle>
+<ParameterUI class="com.fr.form.main.parameter.FormParameterUI">
+<Layout class="com.fr.form.ui.container.WParameterLayout">
+<WidgetName name="para"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Margin top="1" left="1" bottom="1" right="1"/>
+<Border>
+<border style="0" color="-723724" type="0" borderStyle="0"/>
+<WidgetTitle>
+<O>
+<![CDATA[新建标题]]></O>
+<FRFont name="SimSun" style="0" size="72"/>
+<Position pos="0"/>
+</WidgetTitle>
+<Alpha alpha="1.0"/>
+</Border>
+<Background name="ColorBackground" color="-1118482"/>
+<LCAttr vgap="0" hgap="0" compInterval="0"/>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.ComboBox">
+<WidgetName name="Month"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<allowBlank>
+<![CDATA[false]]></allowBlank>
+<DirectEdit>
+<![CDATA[false]]></DirectEdit>
+<CustomData>
+<![CDATA[false]]></CustomData>
+<Dictionary class="com.fr.data.impl.CustomDictionary">
+<CustomDictAttr>
+<Dict key="1" value="1月"/>
+<Dict key="2" value="2月"/>
+<Dict key="3" value="3月"/>
+<Dict key="4" value="4月"/>
+<Dict key="5" value="5月"/>
+<Dict key="6" value="6月"/>
+<Dict key="7" value="7月"/>
+<Dict key="8" value="8月"/>
+<Dict key="9" value="9月"/>
+<Dict key="10" value="10月"/>
+<Dict key="11" value="11月"/>
+<Dict key="12" value="12月"/>
+<Dict key="" value="null:null"/>
+<Dict key="null:null" value="null:null"/>
+</CustomDictAttr>
+</Dictionary>
+<widgetValue>
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=MONTH(today())]]></Attributes>
+</O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="397" y="59" width="158" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="LabelMonth_c"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[月:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="317" y="59" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.ComboBox">
+<WidgetName name="Year"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<allowBlank>
+<![CDATA[false]]></allowBlank>
+<DirectEdit>
+<![CDATA[false]]></DirectEdit>
+<CustomData>
+<![CDATA[false]]></CustomData>
+<Dictionary class="com.fr.data.impl.CustomDictionary">
+<CustomDictAttr>
+<Dict key="2013" value="2013"/>
+<Dict key="2014" value="2014"/>
+<Dict key="2015" value="2015"/>
+<Dict key="2016" value="2016"/>
+<Dict key="2017" value="2017"/>
+<Dict key="2018" value="2018"/>
+<Dict key="2019" value="2019"/>
+<Dict key="2020" value="2020"/>
+</CustomDictAttr>
+</Dictionary>
+<widgetValue>
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=YEAR(Today())]]></Attributes>
+</O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="100" y="59" width="158" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="LabelYear_c"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[年:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="20" y="59" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.parameter.FormSubmitButton">
+<WidgetName name="Search_c"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Text>
+<![CDATA[查询]]></Text>
+<Hotkeys>
+<![CDATA[enter]]></Hotkeys>
+</InnerWidget>
+<BoundsAttr x="436" y="20" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.TreeComboBoxEditor">
+<WidgetName name="UnitId"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<EMSG>
+<![CDATA[门店不能为空]]></EMSG>
+<allowBlank>
+<![CDATA[false]]></allowBlank>
+<TreeAttr selectLeafOnly="false"/>
+<isAutoBuild autoBuild="false"/>
+<Dictionary class="com.fr.data.impl.TableDataDictionary">
+<FormulaDictAttr kiName="UnitID" viName="UnitName"/>
+<TableDataDictAttr>
+<TableData class="com.fr.data.impl.NameTableData">
+<Name>
+<![CDATA[门店树形]]></Name>
+</TableData>
+</TableDataDictAttr>
+</Dictionary>
+<widgetValue>
+<O>
+<![CDATA[]]></O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="100" y="20" width="158" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="LabelUnitId_c"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[门店:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="20" y="20" width="80" height="21"/>
+</Widget>
+<Sorted sorted="false"/>
+<Display display="true"/>
+<DelayDisplayContent delay="true"/>
+<Position position="0"/>
+<Design_Width design_width="960"/>
+<MobileWidgetList>
+<Widget widgetName="UnitId"/>
+<Widget widgetName="Year"/>
+<Widget widgetName="Month"/>
+</MobileWidgetList>
+<WidgetNameTagMap>
+<NameTag name="Month" tag="月:"/>
+<NameTag name="UnitId" tag="门店:"/>
+<NameTag name="Year" tag="年:"/>
+</WidgetNameTagMap>
+</Layout>
+<DesignAttr width="960" height="118"/>
+</ParameterUI>
+</ReportParameterAttr>
+<StyleList>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="1" size="120" foreground="-15442262"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Top style="5" color="-16691294"/>
+<Bottom style="2" color="-4144960"/>
+</Border>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="1" size="72"/>
+<Background name="NullBackground"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="0" size="72"/>
+<Background name="ColorBackground" color="-2691073"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="1" size="72"/>
+<Background name="ColorBackground" color="-12387"/>
+<Border/>
+</Style>
+<Style imageLayout="1">
+<FRFont name="SimSun" style="0" size="72"/>
+<Background name="ColorBackground" color="-12387"/>
+<Border/>
+</Style>
+</StyleList>
+<DesignerVersion DesignerVersion="IAA"/>
+<PreviewType PreviewType="0"/>
+</WorkBook>

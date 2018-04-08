@@ -1,0 +1,868 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WorkBook xmlVersion="20141222" releaseVersion="8.0.0">
+<TableDataMap>
+<TableData name="活动明细" class="com.fr.data.impl.DBTableData">
+<Parameters>
+<Parameter>
+<Attributes name="InteractionType"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="DrawMethodCode"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="user_id"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="EventId"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="startCreateTime"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="endCreateTime"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+</Parameters>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[测试环境]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[declare @CustomerId varchar(100)
+select @CustomerId=customer_id 
+from t_user a 
+where 1=1
+    and a.user_id = '${user_id}' and a.user_status = 1 ;
+
+    
+	SELECT  
+			 a.EventId AS EventId   ---活动Id
+			 ,b.Name AS EventName  ---活动name
+			 ,CASE WHEN b.InteractionType = 1 THEN '关注'
+			      WHEN b.InteractionType = 2 THEN '成交'
+				  ELSE '' END		AS InteractionType ---活动类型
+			 ,CASE WHEN c.DrawMethodCode='DZP' THEN '大转盘'
+			      WHEN c.DrawMethodCode='HB' THEN '红包'
+				  WHEN c.DrawMethodCode='QN' THEN '问卷'
+				  WHEN c.DrawMethodCode='QG' THEN '抢购/秒杀'
+				  WHEN c.DrawMethodCode='TG' THEN '团购'
+				  WHEN c.DrawMethodCode='RX' THEN '热销'
+				  ELSE '' END AS DrawMethodCode  --互动类型
+			,min(b.StartDate) AS  StartDate  ----开始时间
+			,MAX(b.EndDate) AS  EndDate    ----结束时间
+			,SUM(a.TakeVipCount) AS TakeVipCount ----参与总人数			
+			,SUM(a.TakeVipTimes) AS TakeVipTimes  ----参与总人次
+			,SUM(a.InteractiveVipCount) AS InteractiveVipCount  ---互动总人数 
+			,SUM(a.InteractiveVipTimes) AS InteractiveVipTimes ----互动总人次
+			,SUM(a.OrderVipCount) AS OrderVipCount   --购买人数
+			,SUM(a.DOrderCount)	AS DOrderCount  ---直接下单数量
+			,SUM(a.DOrderAmount) AS DOrderAmount ---直接下单金额
+			,SUM(a.BOrderCount) AS BOrderCount  ---带动下单总数量
+			,SUM(a.BOrderAmount) AS BOrderAmount ---带动下单总金额
+			,SUM(a.NewFunsCount) AS  NewFunsCount --新增粉丝数 
+			,SUM(a.NewVipCount) AS NewVipCount --新增会员数
+			,SUM(a.GivePoints) AS GivePoints  --积分发放总数
+			,SUM(a.GiveCashCouponCount) AS GiveCashCouponCount --代金券发放总数
+			,SUM(a.UseCashCouponCount)  AS UseCashCouponCount --代金券核销总数
+			,SUM(a.GiveGiftCouponCount) AS GiveGiftCouponCount --兑换券发放总数 
+			,SUM(a.UseGiftCouponCount) AS UseGiftCouponCount --兑换券核销总数
+			,SUM(a.GiveDiscountCouponCount) AS GiveDiscountCouponCount --折扣券发放总数
+			,SUM(a.UseDiscountCouponCount) AS UseDiscountCouponCount ---折扣券核销总数
+			,SUM(a.GiveGeneralCouponCount) AS GiveGeneralCouponCount  ---通用券发放总数
+			,SUM(a.UseGeneralCouponCount) AS UseGeneralCouponCount   ----通用券核销总数
+	FROM Agg_EventEffect a 
+	LEFT JOIN T_CTW_LEvent b ON a.EventId= b.CTWEventId AND b.CustomerId= a.CustomerId AND  b.IsDelete = 0 
+	LEFT JOIN T_CTW_LEventInteraction c ON a.EventId= c.CTWEventId  AND c.CustomerId= a.CustomerId AND  b.IsDelete = 0 
+	  WHERE 1=1 
+	       and   a.CustomerId =@CustomerId
+	        AND NOT (b.EndDate < '${startCreateTime}' OR b.StartDate >= '${datedelta(endCreateTime,1)}')
+			AND (b.InteractionType ='${InteractionType}' or '-1'='${InteractionType}')
+	        --AND (a.EventId ='${EventId}' or '-1'='${EventId}')
+		    AND (c.DrawMethodCode ='${DrawMethodCode}' or '-1'='${DrawMethodCode}')
+	        GROUP BY 
+	         a.EventId    ---活动Id
+			 ,b.Name   ---活动name
+			 ,b.InteractionType ---活动类型
+			 ,c.DrawMethodCode  --互动类型
+
+]]></Query>
+</TableData>
+<TableData name="活动名称" class="com.fr.data.impl.DBTableData">
+<Parameters>
+<Parameter>
+<Attributes name="User_Id"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+</Parameters>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[测试环境]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[ SELECT '-1' as CTWEventId,'全部' as Name
+			UNION all
+			select cast(a.CTWEventId as varchar(100) )AS CTWEventId,a.Name AS Name from T_CTW_LEvent a 
+				WHERE 1=1 
+			AND a.IsDelete = 0]]></Query>
+</TableData>
+<TableData name="活动类型" class="com.fr.data.impl.DBTableData">
+<Parameters/>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[测试环境]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[SELECT '-1' as InteractionType,'全部' as InteractionNAME
+	UNION all
+SELECT   '1' as InteractionType , '关注' as InteractionNAME
+	UNION all
+SELECT '2' as InteractionType ,'成交' as InteractionNAME ---活动类型
+
+]]></Query>
+</TableData>
+<TableData name="互动类型" class="com.fr.data.impl.DBTableData">
+<Parameters>
+<Parameter>
+<Attributes name="InteractionType"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+</Parameters>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[测试环境]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[SELECT '-1' as DrawMethodCode,'全部' as DrawMethodName
+					UNION all
+					select  
+					  tmp.DrawMethodCode as DrawMethodCode 
+					  ,tmp.DrawMethodName as DrawMethodName
+					 from (
+					select 
+					   'DZP' as DrawMethodCode,'大转盘' as DrawMethodName ,'1' as InteractionType
+					   UNION all
+					select 
+					    'HB' as DrawMethodCode,'红包' as DrawMethodName ,'1' as InteractionType
+					 
+					   UNION all
+					select    'QG' as DrawMethodCode,'抢购/秒杀' as DrawMethodName ,'2' as InteractionType
+					   UNION all
+					select    'TG' as DrawMethodCode,'团购' as DrawMethodName ,'2' as InteractionType
+					   
+					) tmp  
+			  where 1=1
+              AND (tmp.InteractionType ='${InteractionType}' or '-1'='${InteractionType}' )]]></Query>
+</TableData>
+</TableDataMap>
+<Report class="com.fr.report.worksheet.WorkSheet" name="sheet1">
+<ReportPageAttr>
+<HR F="0" T="1"/>
+<FR/>
+<HC/>
+<FC/>
+</ReportPageAttr>
+<ColumnPrivilegeControl/>
+<RowPrivilegeControl/>
+<RowHeight defaultValue="723900">
+<![CDATA[1296000,1295400,723900,723900,723900,723900,723900,723900,723900,723900,723900]]></RowHeight>
+<ColumnWidth defaultValue="2743200">
+<![CDATA[2247900,3200400,6743700,3168000,3168000,2743200,2743200,2743200,2971800,2895600,3390900,3276600,2476500,2362200,2971800,3312000,3312000,3312000,3312000,0,0,0,0,2743200]]></ColumnWidth>
+<CellElementList>
+<C c="0" r="0" cs="23" s="0">
+<O>
+<![CDATA[活动明细]]></O>
+<PrivilegeControl/>
+<CellPageAttr/>
+<Expand extendable="1"/>
+</C>
+<C c="0" r="1" s="1">
+<O>
+<![CDATA[活动类型]]></O>
+<PrivilegeControl/>
+<CellPageAttr/>
+<Expand extendable="1"/>
+</C>
+<C c="1" r="1" s="1">
+<O>
+<![CDATA[互动类型]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="2" r="1" s="1">
+<O>
+<![CDATA[活动名称]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="3" r="1" s="1">
+<O>
+<![CDATA[开始时间]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="4" r="1" s="1">
+<O>
+<![CDATA[结束时间]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="5" r="1" s="1">
+<O>
+<![CDATA[参与总人数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="6" r="1" s="1">
+<O>
+<![CDATA[参与总人次]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="7" r="1" s="1">
+<O>
+<![CDATA[购买人数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="8" r="1" s="1">
+<O>
+<![CDATA[直接下单数量]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="9" r="1" s="1">
+<O>
+<![CDATA[直接下单金额]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="10" r="1" s="1">
+<O>
+<![CDATA[带动下单总数量]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="11" r="1" s="1">
+<O>
+<![CDATA[带动下单总金额]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="12" r="1" s="1">
+<O>
+<![CDATA[新增粉丝数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="13" r="1" s="1">
+<O>
+<![CDATA[新增会员数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="14" r="1" s="1">
+<O>
+<![CDATA[积分发放总数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="15" r="1" s="1">
+<O>
+<![CDATA[代金券发放总数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="16" r="1" s="1">
+<O>
+<![CDATA[代金券核销总数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="17" r="1" s="1">
+<O>
+<![CDATA[兑换券发放总数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="18" r="1" s="1">
+<O>
+<![CDATA[兑换券核销总数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="19" r="1" s="1">
+<O>
+<![CDATA[折扣券发放总数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="20" r="1" s="1">
+<O>
+<![CDATA[折扣券核销总数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="21" r="1" s="1">
+<O>
+<![CDATA[通用券发放总数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="22" r="1" s="1">
+<O>
+<![CDATA[通用券核销总数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="0" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="InteractionType"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<CellPageAttr/>
+<Expand dir="0"/>
+</C>
+<C c="1" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="DrawMethodCode"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="2" r="2" s="3">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="EventName"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="3" r="2" s="4">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="StartDate"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="4" r="2" s="4">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="EndDate"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="5" r="2" s="5">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="TakeVipCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="6" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="TakeVipTimes"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="7" r="2" s="5">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="OrderVipCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="8" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="DOrderCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="9" r="2" s="7">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="DOrderAmount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="10" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="BOrderCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="11" r="2" s="7">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="BOrderAmount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="12" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="NewFunsCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="13" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="NewVipCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="14" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="GivePoints"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="15" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="GiveCashCouponCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="16" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="UseCashCouponCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="17" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="GiveGiftCouponCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="18" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="UseGiftCouponCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="19" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="GiveDiscountCouponCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="20" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="UseDiscountCouponCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="21" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="GiveGeneralCouponCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="22" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="活动明细" columnName="UseGeneralCouponCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+</CellElementList>
+<ReportAttrSet>
+<ReportSettings headerHeight="0" footerHeight="0">
+<PaperSetting orientation="1">
+<PaperSize width="42768000" height="60480000"/>
+<Margin top="0" left="0" bottom="986400" right="7200"/>
+</PaperSetting>
+</ReportSettings>
+<Header reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Header>
+<Footer reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Footer>
+</ReportAttrSet>
+<PrivilegeControl/>
+</Report>
+<ReportParameterAttr>
+<Attributes showWindow="true" delayPlaying="true" windowPosition="1" align="0"/>
+<PWTitle>
+<![CDATA[参数]]></PWTitle>
+<ParameterUI class="com.fr.form.main.parameter.FormParameterUI">
+<Layout class="com.fr.form.ui.container.WParameterLayout">
+<WidgetName name="para"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Margin top="1" left="1" bottom="1" right="1"/>
+<Border>
+<border style="0" color="-723724" type="0" borderStyle="0"/>
+<WidgetTitle>
+<O>
+<![CDATA[新建标题]]></O>
+<FRFont name="SimSun" style="0" size="72"/>
+<Position pos="0"/>
+</WidgetTitle>
+<Alpha alpha="1.0"/>
+</Border>
+<Background name="ColorBackground" color="-1118482"/>
+<LCAttr vgap="0" hgap="0" compInterval="0"/>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.parameter.FormSubmitButton">
+<WidgetName name="Search"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Text>
+<![CDATA[查询]]></Text>
+<Hotkeys>
+<![CDATA[enter]]></Hotkeys>
+</InnerWidget>
+<BoundsAttr x="572" y="52" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="LabelstartCreateTime"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[日期:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="84" y="19" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.DateEditor">
+<WidgetName name="startCreateTime"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<DateAttr/>
+<widgetValue>
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=DATEDELTA(today(),-30)]]></Attributes>
+</O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="164" y="19" width="120" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="LabelendCreateTime"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[至:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="306" y="19" width="44" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.DateEditor">
+<WidgetName name="endCreateTime"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<DateAttr/>
+<widgetValue>
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=today()]]></Attributes>
+</O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="374" y="19" width="120" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="LabelstartInteractionType"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[活动类型:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="84" y="81" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="LabelstartDrawMethodCode"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[互动类型:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="294" y="81" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.ComboBox">
+<WidgetName name="InteractionType"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<EMSG>
+<![CDATA[请选择活动名称]]></EMSG>
+<Dictionary class="com.fr.data.impl.TableDataDictionary">
+<FormulaDictAttr kiName="InteractionType" viName="InteractionNAME"/>
+<TableDataDictAttr>
+<TableData class="com.fr.data.impl.NameTableData">
+<Name>
+<![CDATA[活动类型]]></Name>
+</TableData>
+</TableDataDictAttr>
+</Dictionary>
+<widgetValue>
+<O>
+<![CDATA[-1]]></O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="164" y="81" width="120" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.ComboBox">
+<WidgetName name="DrawMethodCode"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<EMSG>
+<![CDATA[请选择活动名称]]></EMSG>
+<DirectEdit>
+<![CDATA[false]]></DirectEdit>
+<CustomData>
+<![CDATA[false]]></CustomData>
+<Dictionary class="com.fr.data.impl.TableDataDictionary">
+<FormulaDictAttr kiName="DrawMethodCode" viName="DrawMethodName"/>
+<TableDataDictAttr>
+<TableData class="com.fr.data.impl.NameTableData">
+<Name>
+<![CDATA[互动类型]]></Name>
+</TableData>
+</TableDataDictAttr>
+</Dictionary>
+<widgetValue>
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=IF($InteractionType,-1,'全部')]]></Attributes>
+</O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="374" y="81" width="120" height="21"/>
+</Widget>
+<Sorted sorted="false"/>
+<Display display="true"/>
+<DelayDisplayContent delay="true"/>
+<Position position="0"/>
+<Design_Width design_width="960"/>
+<MobileWidgetList>
+<Widget widgetName="startCreateTime"/>
+<Widget widgetName="endCreateTime"/>
+<Widget widgetName="InteractionType"/>
+<Widget widgetName="DrawMethodCode"/>
+</MobileWidgetList>
+<WidgetNameTagMap>
+<NameTag name="InteractionType" tag="活动类型:"/>
+<NameTag name="DrawMethodCode" tag="互动类型:"/>
+<NameTag name="startCreateTime" tag="日期:"/>
+<NameTag name="endCreateTime" tag="至:"/>
+</WidgetNameTagMap>
+</Layout>
+<DesignAttr width="960" height="140"/>
+</ParameterUI>
+</ReportParameterAttr>
+<StyleList>
+<Style horizontal_alignment="2" imageLayout="1">
+<Format class="com.fr.base.CoreDecimalFormat">
+<![CDATA[#0.00]]></Format>
+<FRFont name="微软雅黑" style="1" size="120" foreground="-15442262"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Top style="5" color="-16691294"/>
+<Bottom style="2" color="-4144960"/>
+</Border>
+</Style>
+<Style horizontal_alignment="0" imageLayout="1">
+<FRFont name="微软雅黑" style="1" size="72"/>
+<Background name="NullBackground"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="0" imageLayout="1">
+<FRFont name="SimSun" style="0" size="72"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="SimSun" style="0" size="72"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="0" imageLayout="1">
+<Format class="java.text.SimpleDateFormat">
+<![CDATA[yyyy-MM-dd]]></Format>
+<FRFont name="SimSun" style="0" size="72"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="4" imageLayout="1">
+<Format class="com.fr.base.CoreDecimalFormat">
+<![CDATA[#0]]></Format>
+<FRFont name="SimSun" style="0" size="72"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="4" imageLayout="1">
+<FRFont name="SimSun" style="0" size="72"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="4" imageLayout="1">
+<Format class="com.fr.base.CoreDecimalFormat">
+<![CDATA[#0.00]]></Format>
+<FRFont name="SimSun" style="0" size="72"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+</StyleList>
+<DesignerVersion DesignerVersion="IAA"/>
+<PreviewType PreviewType="0"/>
+</WorkBook>

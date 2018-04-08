@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WorkBook xmlVersion="20141222" releaseVersion="8.0.0">
+<TableDataMap>
+<TableData name="月积分抵扣汇总" class="com.fr.data.impl.DBTableData">
+<Parameters>
+<Parameter>
+<Attributes name="p1"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="p2"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="p3"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="p4"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+</Parameters>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[测试环境]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[with temp ( dst_unit_id, src_unit_id)
+as
+(
+select dst_unit_id,src_unit_id
+from T_Unit_Relation
+where dst_unit_id = '${p2}'
+ 
+union all
+select a.dst_unit_id,a.src_unit_id
+from T_Unit_Relation a
+inner join temp on a.src_unit_id = temp.dst_unit_id
+)
+
+SELECT DATEPART(YEAR,[Date_Code]A) AS Year_Name
+	  ,DATEPART(MONTH,[Date_Code]A) AS Month_Name
+      ,[Unit_ID]A
+	 ,'直营店' as Store_Type
+      ,[Unit_Name]A
+      ,SUM([Integral_Consume_Order_Count]A) Integral_Consume_Order_Count
+      ,SUM([Integral_Consume_Person_Count]A) Integral_Consume_Person_Count
+      ,-SUM([Integral_Consume_Count]A) Integral_Consume_Count
+      ,-SUM([Integral_Consum_Amount]A) Integral_Consum_Amount
+  FROM [Agg_DailyUnitInfo]A
+WHERE
+  1=1 
+  and Store_Type = '${p1}'
+  AND Unit_ID IN (SELECT dst_unit_id FROM temp )
+  AND DATEPART(YEAR,Date_Code) = '${p3}'
+  AND DATEPART(MONTH,Date_Code) = '${p4}'
+  AND Integral_Consume_Count <> 0
+
+GROUP BY DATEPART(YEAR,[Date_Code]A)
+	  ,DATEPART(MONTH,[Date_Code]A)
+      ,[Unit_ID]A
+	  ,[Store_Type]A
+      ,[Unit_Name]A
+]]></Query>
+</TableData>
+</TableDataMap>
+<Report class="com.fr.report.worksheet.WorkSheet" name="sheet1">
+<ReportPageAttr>
+<HR/>
+<FR/>
+<HC/>
+<FC/>
+</ReportPageAttr>
+<ColumnPrivilegeControl/>
+<RowPrivilegeControl/>
+<RowHeight defaultValue="723900">
+<![CDATA[1296000,722880,723900,723900,723900,723900,723900,723900,723900,723900,723900]]></RowHeight>
+<ColumnWidth defaultValue="2743200">
+<![CDATA[2743200,2743200,4800600,2743200,3886200,4457700,5295900,2743200,2743200,2743200,2743200]]></ColumnWidth>
+<CellElementList>
+<C c="0" r="0" cs="7" s="0">
+<O>
+<![CDATA[月积分抵扣汇总表]]></O>
+<PrivilegeControl/>
+<CellGUIAttr/>
+<CellPageAttr/>
+<Expand/>
+</C>
+<C c="0" r="1" s="1">
+<O>
+<![CDATA[月份]]></O>
+<PrivilegeControl/>
+</C>
+<C c="1" r="1" s="1">
+<O>
+<![CDATA[渠道]]></O>
+<PrivilegeControl/>
+</C>
+<C c="2" r="1" s="1">
+<O>
+<![CDATA[门店]]></O>
+<PrivilegeControl/>
+</C>
+<C c="3" r="1" s="1">
+<O>
+<![CDATA[订单总数]]></O>
+<PrivilegeControl/>
+</C>
+<C c="4" r="1" s="1">
+<O>
+<![CDATA[总人数]]></O>
+<PrivilegeControl/>
+</C>
+<C c="5" r="1" s="1">
+<O>
+<![CDATA[积分抵扣总数]]></O>
+<PrivilegeControl/>
+</C>
+<C c="6" r="1" s="1">
+<O>
+<![CDATA[积分抵扣总金额（元）]]></O>
+<PrivilegeControl/>
+</C>
+<C c="0" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="月积分抵扣汇总" columnName="Month_Name"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="1" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="月积分抵扣汇总" columnName="Store_Type"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="2" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="月积分抵扣汇总" columnName="Unit_Name"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="3" r="2" s="3">
+<O t="DSColumn">
+<Attributes dsName="月积分抵扣汇总" columnName="Integral_Consume_Order_Count"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="4" r="2" s="3">
+<O t="DSColumn">
+<Attributes dsName="月积分抵扣汇总" columnName="Integral_Consume_Person_Count"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="5" r="2" s="3">
+<O t="DSColumn">
+<Attributes dsName="月积分抵扣汇总" columnName="Integral_Consume_Count"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="6" r="2" s="3">
+<O t="DSColumn">
+<Attributes dsName="月积分抵扣汇总" columnName="Integral_Consum_Amount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="0" r="3" s="4">
+<O>
+<![CDATA[总计:]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="3" s="5">
+<PrivilegeControl/>
+</C>
+<C c="2" r="3" s="5">
+<PrivilegeControl/>
+</C>
+<C c="3" r="3" s="4">
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=sum(D3)]]></Attributes>
+</O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="4" r="3" s="4">
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=sum(E3)]]></Attributes>
+</O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="5" r="3" s="4">
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=sum(F3)]]></Attributes>
+</O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="6" r="3" s="6">
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=sum(G3)]]></Attributes>
+</O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+</CellElementList>
+<ReportAttrSet>
+<ReportSettings headerHeight="0" footerHeight="0">
+<PaperSetting>
+<Margin top="0" left="0" bottom="986400" right="2743200"/>
+</PaperSetting>
+</ReportSettings>
+</ReportAttrSet>
+<PrivilegeControl/>
+</Report>
+<ReportParameterAttr>
+<Attributes showWindow="true" delayPlaying="true" windowPosition="1" align="0"/>
+<PWTitle>
+<![CDATA[参数]]></PWTitle>
+<ParameterUI class="com.fr.form.main.parameter.FormParameterUI">
+<Layout class="com.fr.form.ui.container.WParameterLayout">
+<WidgetName name="para"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Margin top="1" left="1" bottom="1" right="1"/>
+<Border>
+<border style="0" color="-723724" type="0" borderStyle="0"/>
+<WidgetTitle>
+<O>
+<![CDATA[新建标题]]></O>
+<FRFont name="SimSun" style="0" size="72"/>
+<Position pos="0"/>
+</WidgetTitle>
+<Alpha alpha="1.0"/>
+</Border>
+<Background name="ColorBackground" color="-1118482"/>
+<LCAttr vgap="0" hgap="0" compInterval="0"/>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="Labelp1"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[渠道:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="50" y="25" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.ComboBox">
+<WidgetName name="p1"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Dictionary class="com.fr.data.impl.CustomDictionary">
+<CustomDictAttr>
+<Dict key="直营店" value="直营店"/>
+<Dict key="加盟店" value="加盟店"/>
+</CustomDictAttr>
+</Dictionary>
+<widgetValue>
+<O>
+<![CDATA[直营店]]></O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="130" y="25" width="114" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.parameter.FormSubmitButton">
+<WidgetName name="Search"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Text>
+<![CDATA[查询]]></Text>
+<Hotkeys>
+<![CDATA[enter]]></Hotkeys>
+</InnerWidget>
+<BoundsAttr x="539" y="25" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="Labelp2"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[门店:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="284" y="25" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="Labelp3"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[年份:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="50" y="76" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.ComboBox">
+<WidgetName name="p3"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<allowBlank>
+<![CDATA[false]]></allowBlank>
+<Dictionary class="com.fr.data.impl.CustomDictionary">
+<CustomDictAttr>
+<Dict key="2013" value="2013"/>
+<Dict key="2014" value="2014"/>
+<Dict key="2015" value="2015"/>
+<Dict key="2016" value="2016"/>
+<Dict key="2017" value="2017"/>
+<Dict key="2018" value="2018"/>
+<Dict key="2019" value="2019"/>
+<Dict key="2020" value="2020"/>
+</CustomDictAttr>
+</Dictionary>
+<widgetValue>
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=year(today())]]></Attributes>
+</O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="130" y="76" width="114" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="Labelp4"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[月份:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="284" y="76" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.ComboBox">
+<WidgetName name="p4"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<allowBlank>
+<![CDATA[false]]></allowBlank>
+<Dictionary class="com.fr.data.impl.CustomDictionary">
+<CustomDictAttr>
+<Dict key="1" value="1"/>
+<Dict key="2" value="2"/>
+<Dict key="3" value="3"/>
+<Dict key="4" value="4"/>
+<Dict key="5" value="5"/>
+<Dict key="6" value="6"/>
+<Dict key="7" value="7"/>
+<Dict key="8" value="8"/>
+<Dict key="9" value="9"/>
+<Dict key="10" value="10"/>
+<Dict key="11" value="11"/>
+<Dict key="12" value="12"/>
+</CustomDictAttr>
+</Dictionary>
+<widgetValue>
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=month(today()) + 月]]></Attributes>
+</O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="364" y="76" width="114" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.TreeComboBoxEditor">
+<WidgetName name="p2"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<EMSG>
+<![CDATA[门店不能为空]]></EMSG>
+<allowBlank>
+<![CDATA[false]]></allowBlank>
+<TreeAttr returnFullPath="true" selectLeafOnly="false"/>
+<isAutoBuild autoBuild="false"/>
+<Dictionary class="com.fr.data.impl.TableDataDictionary">
+<FormulaDictAttr kiName="UnitID" viName="UnitName"/>
+<TableDataDictAttr>
+<TableData class="com.fr.data.impl.NameTableData">
+<Name>
+<![CDATA[门店树形]]></Name>
+</TableData>
+</TableDataDictAttr>
+</Dictionary>
+<widgetValue>
+<O>
+<![CDATA[]]></O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="364" y="25" width="114" height="21"/>
+</Widget>
+<Sorted sorted="false"/>
+<Display display="true"/>
+<DelayDisplayContent delay="true"/>
+<Position position="0"/>
+<Design_Width design_width="960"/>
+<MobileWidgetList>
+<Widget widgetName="p1"/>
+<Widget widgetName="p2"/>
+<Widget widgetName="p3"/>
+<Widget widgetName="p4"/>
+</MobileWidgetList>
+<WidgetNameTagMap>
+<NameTag name="p1" tag="渠道:"/>
+<NameTag name="p2" tag="门店:"/>
+<NameTag name="p3" tag="年份:"/>
+<NameTag name="p4" tag="月份:"/>
+</WidgetNameTagMap>
+</Layout>
+<DesignAttr width="960" height="124"/>
+</ParameterUI>
+</ReportParameterAttr>
+<StyleList>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="1" size="120" foreground="-15442262"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Top style="5" color="-16691294"/>
+<Bottom style="2" color="-4144960"/>
+</Border>
+</Style>
+<Style imageLayout="1">
+<FRFont name="微软雅黑" style="1" size="72"/>
+<Background name="NullBackground"/>
+<Border/>
+</Style>
+<Style imageLayout="1">
+<FRFont name="微软雅黑" style="0" size="72"/>
+<Background name="ColorBackground" color="-2691073"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="0" size="72"/>
+<Background name="ColorBackground" color="-2691073"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="1" size="72"/>
+<Background name="ColorBackground" color="-12387"/>
+<Border/>
+</Style>
+<Style imageLayout="1">
+<FRFont name="SimSun" style="0" size="72"/>
+<Background name="ColorBackground" color="-12387"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="SimSun" style="1" size="72"/>
+<Background name="ColorBackground" color="-12387"/>
+<Border/>
+</Style>
+</StyleList>
+<DesignerVersion DesignerVersion="IAA"/>
+<PreviewType PreviewType="0"/>
+</WorkBook>

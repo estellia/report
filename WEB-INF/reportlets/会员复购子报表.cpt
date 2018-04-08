@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WorkBook xmlVersion="20141222" releaseVersion="8.0.0">
+<TableDataMap>
+<TableData name="ds1" class="com.fr.data.impl.DBTableData">
+<Parameters/>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[测试环境]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[SELECT * FROM (
+SELECT t1.order_date
+	  ,t1.order_count
+	  ,MAX(Monthly_Order_Count)  Monthly_Order_Count
+	  ,SUM(t2.order_count) Yearly_Order_Count
+	   FROM (
+SELECT t1.order_date
+	  ,t1.order_count
+	  ,SUM(t2.order_count) AS Monthly_Order_Count
+
+ FROM (
+	SELECT CAST(order_date AS DATE) AS order_date
+		  ,COUNT(DISTINCT vip_no) AS order_count
+	 FROM t_inout A
+	WHERE EXISTS (
+		SELECT 1 FROM t_inout B
+		WHERE A.vip_no = b.vip_no
+		  AND B.order_date < a.order_date
+	)
+	GROUP BY CAST(order_date AS DATE)
+) t1
+LEFT JOIN 
+(
+	SELECT CAST(order_date AS DATE) AS order_date
+		  ,COUNT(DISTINCT vip_no) AS order_count
+	 FROM t_inout A
+	WHERE EXISTS (
+		SELECT 1 FROM t_inout B
+		WHERE A.vip_no = b.vip_no
+		  AND B.order_date < a.order_date
+	)
+	GROUP BY CAST(order_date AS DATE)
+) t2
+ON CONVERT(VARCHAR(6),t1.order_date,112) = CONVERT(VARCHAR(6),t2.order_date,112)
+AND t1.order_date >= t2.order_date
+
+
+GROUP BY t1.order_date
+	  ,t1.order_count
+)t1
+LEFT JOIN 
+(
+	SELECT CAST(order_date AS DATE) AS order_date
+		  ,COUNT(DISTINCT vip_no) AS order_count
+	 FROM t_inout A
+	WHERE EXISTS (
+		SELECT 1 FROM t_inout B
+		WHERE A.vip_no = b.vip_no
+		  AND B.order_date < a.order_date
+	)
+	GROUP BY CAST(order_date AS DATE)
+) t2
+ON CONVERT(VARCHAR(4),t1.order_date,112) = CONVERT(VARCHAR(4),t2.order_date,112)
+AND t1.order_date >= t2.order_date
+GROUP BY t1.order_date
+	  ,t1.order_count
+	  )
+T
+WHERE order_date = DATEADD(DAY,-1,CAST(GETDATE() AS DATE))
+ORDER BY order_date]]></Query>
+</TableData>
+</TableDataMap>
+<Report class="com.fr.report.worksheet.WorkSheet" name="sheet1">
+<ReportPageAttr>
+<HR/>
+<FR/>
+<HC/>
+<FC/>
+</ReportPageAttr>
+<ColumnPrivilegeControl/>
+<RowPrivilegeControl/>
+<RowHeight defaultValue="723900">
+<![CDATA[1152000,1152000,1152000,723900,723900,723900,723900,723900,723900,723900,723900]]></RowHeight>
+<ColumnWidth defaultValue="2743200">
+<![CDATA[4991100,3162300,2743200,2743200,2743200,2743200,2743200,2743200,2743200,2743200,2743200]]></ColumnWidth>
+<CellElementList>
+<C c="0" r="0" s="0">
+<O>
+<![CDATA[昨日复购人数：]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="0" s="1">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="order_count"/>
+<Condition class="com.fr.data.condition.ListCondition"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Result>
+<![CDATA[order_count+"（人）"]]></Result>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="0" r="1" s="0">
+<O>
+<![CDATA[月度复购累积人数：]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="1" s="1">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="Monthly_Order_Count"/>
+<Condition class="com.fr.data.condition.ListCondition"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Result>
+<![CDATA[Monthly_Order_Count+"（人）"]]></Result>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="0" r="2" s="0">
+<O>
+<![CDATA[年度复购累积人数：]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="2" s="1">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="Yearly_Order_Count"/>
+<Condition class="com.fr.data.condition.ListCondition"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Result>
+<![CDATA[Yearly_Order_Count+"（人）"]]></Result>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+</CellElementList>
+<ReportAttrSet>
+<ReportSettings headerHeight="0" footerHeight="0">
+<PaperSetting/>
+</ReportSettings>
+<Header reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Header>
+<Footer reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Footer>
+</ReportAttrSet>
+<PrivilegeControl/>
+</Report>
+<ReportParameterAttr>
+<Attributes showWindow="true" delayPlaying="true" windowPosition="1" align="0"/>
+<PWTitle>
+<![CDATA[参数]]></PWTitle>
+</ReportParameterAttr>
+<StyleList>
+<Style horizontal_alignment="4" imageLayout="1">
+<FRFont name="SimSun" style="1" size="72" foreground="-4144960"/>
+<Background name="NullBackground"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="SimSun" style="1" size="72" foreground="-2782038"/>
+<Background name="NullBackground"/>
+<Border/>
+</Style>
+</StyleList>
+<DesignerVersion DesignerVersion="IAA"/>
+<PreviewType PreviewType="0"/>
+</WorkBook>

@@ -1,0 +1,534 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WorkBook xmlVersion="20141222" releaseVersion="8.0.0">
+<TableDataMap>
+<TableData name="集客分润明细" class="com.fr.data.impl.DBTableData">
+<Parameters>
+<Parameter>
+<Attributes name="UnitId"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="StoreType_c"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="startCreateTime"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="ur"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="endCreateTime"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+</Parameters>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[测试环境]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[with temp ( dst_unit_id, src_unit_id) AS
+(
+	select dst_unit_id,src_unit_id
+	from T_Unit_Relation
+	where dst_unit_id = '${UnitId}'
+	union all
+	select a.dst_unit_id,a.src_unit_id
+	from T_Unit_Relation a INNER join temp on a.src_unit_id = temp.dst_unit_id
+)
+SELECT t.UserName
+	,case t.SetoffRole when 1 then '店员' when 2 then '会员' else '' end as SetoffRole
+	,t.UnitID
+	,t.UnitName
+	,CASE t.StoreType WHEN 'NapaStores' THEN '加盟店' ELSE '直营店' END AS StoreType
+	,sum(t.SetoffCount) as SetoffCount
+	,sum(t.SetoffVipCount) as SetoffVipCount
+	,sum(t.SetoffProfit) as SetoffProfit
+	,sum(t.SetoffPoint) as SetoffPoint
+	,sum(t.SalesProfit) as SalesProfit
+	,sum(t.ReturnSalesProfit) as ReturnSalesProfit
+	,sum(t.TotalProfit) as TotalProfit
+FROM
+	(
+		SELECT t.DateCode
+			,t.UserID
+			,u.user_name AS UserName
+			,t.SetoffRole
+			,t.UnitID
+			,s.unit_name AS UnitName
+			,CASE s.StoreType WHEN 'NapaStores' THEN s.StoreType ELSE 'DirectStore' END AS StoreType
+			,t.SetoffCount
+			,t.SetoffVipCount
+			,t.SetoffProfit
+			,t.SetoffPoint
+			,t.SalesProfit
+			,t.ReturnSalesProfit
+			,(t.SetoffProfit+t.SetoffPoint2Amount+t.SalesProfit+t.ReturnSalesProfit) AS TotalProfit
+		FROM Agg_SetoffProfit_UserDaily t 
+			LEFT JOIN t_user u ON t.CustomerId = u.customer_id AND t.UserID = u.user_id AND u.user_status = '1'
+			LEFT JOIN t_unit s ON t.CustomerId = s.customer_id AND t.UnitID = s.unit_id AND s.Status = '1'
+		WHERE t.SetoffRole = 1
+		UNION ALL
+		SELECT t.DateCode
+			,t.UserID
+			,CASE WHEN ISNULL(v.VipRealName,'') = '' THEN v.VipName else v.VipRealName END AS UserName
+			,t.SetoffRole
+			,t.UnitID
+			,s.unit_name AS UnitName
+			,CASE s.StoreType WHEN 'NapaStores' THEN s.StoreType ELSE 'DirectStore' END AS StoreType
+			,t.SetoffCount
+			,t.SetoffVipCount
+			,t.SetoffProfit
+			,t.SetoffPoint
+			,t.SalesProfit
+			,t.ReturnSalesProfit
+			,(t.SetoffProfit+t.SetoffPoint2Amount+t.SalesProfit+t.ReturnSalesProfit) AS TotalProfit
+		FROM Agg_SetoffProfit_UserDaily t 
+			LEFT JOIN Vip v ON t.CustomerId = v.ClientID AND t.UserID = v.VIPID AND v.IsDelete = 0
+			LEFT JOIN t_unit s ON t.CustomerId = s.customer_id AND t.UnitID = s.unit_id AND s.Status = '1'
+		WHERE t.SetoffRole = 2
+	) t
+WHERE 1=1
+	AND t.UnitId in (select dst_unit_id from temp)
+	AND t.DateCode BETWEEN '${startCreateTime}' AND '${endCreateTime}'
+	${if(len(StoreType_c) == 0,"","and (('"+StoreType_c+"' = 'NapaStores' and t.StoreType = 'NapaStores')
+	     or ('"+StoreType_c+"' = 'DirectStore' and (t.StoreType <> 'NapaStores' or t.StoreType is null))
+	    )")} 
+	${if(len(ur) == 0 || ur == "0","","and t.SetoffRole = '" + ur + "'")} 	
+	and (t.SetoffCount > 0 or t.SetoffVipCount > 0)
+group by t.SetoffRole,t.UserID,t.UserName,t.UnitID,t.UnitName,t.StoreType
+order by t.UserName,t.UnitName]]></Query>
+</TableData>
+</TableDataMap>
+<Report class="com.fr.report.worksheet.WorkSheet" name="sheet1">
+<ReportPageAttr>
+<HR F="0" T="1"/>
+<FR/>
+<HC/>
+<FC/>
+</ReportPageAttr>
+<ColumnPrivilegeControl/>
+<RowPrivilegeControl/>
+<RowHeight defaultValue="723900">
+<![CDATA[1296000,1295400,723900,723900,723900,723900,723900,723900,723900,723900,723900]]></RowHeight>
+<ColumnWidth defaultValue="2743200">
+<![CDATA[3200400,2286000,4648200,2705100,2628900,4305300,2743200,2743200,2743200,2743200,2743200]]></ColumnWidth>
+<CellElementList>
+<C c="0" r="0" cs="6" s="0">
+<O>
+<![CDATA[集客分润明细]]></O>
+<PrivilegeControl/>
+<CellPageAttr/>
+<Expand extendable="1"/>
+</C>
+<C c="0" r="1" s="1">
+<O>
+<![CDATA[姓名]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="1" s="1">
+<O>
+<![CDATA[人员类型]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="2" r="1" s="1">
+<O>
+<![CDATA[门店名称]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="3" r="1" s="1">
+<O>
+<![CDATA[门店类型]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="4" r="1" s="1">
+<O>
+<![CDATA[集客人数]]></O>
+<PrivilegeControl/>
+<CellPageAttr/>
+<Expand extendable="1"/>
+</C>
+<C c="5" r="1" s="1">
+<O>
+<![CDATA[集客注册的人数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="0" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="集客分润明细" columnName="UserName"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="1" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="集客分润明细" columnName="SetoffRole"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="2" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="集客分润明细" columnName="UnitName"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="3" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="集客分润明细" columnName="StoreType"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="4" r="2" s="3">
+<O t="DSColumn">
+<Attributes dsName="集客分润明细" columnName="SetoffCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper">
+<Attr divideMode="1"/>
+</RG>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<CellPageAttr/>
+<Expand dir="0"/>
+</C>
+<C c="5" r="2" s="3">
+<O t="DSColumn">
+<Attributes dsName="集客分润明细" columnName="SetoffVipCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper">
+<Attr divideMode="1"/>
+</RG>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+</CellElementList>
+<ReportAttrSet>
+<ReportSettings headerHeight="0" footerHeight="0">
+<PaperSetting>
+<Margin top="0" left="0" bottom="986400" right="2743200"/>
+</PaperSetting>
+</ReportSettings>
+<Header reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Header>
+<Footer reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Footer>
+</ReportAttrSet>
+<PrivilegeControl/>
+</Report>
+<ReportParameterAttr>
+<Attributes showWindow="true" delayPlaying="true" windowPosition="1" align="0"/>
+<PWTitle>
+<![CDATA[参数]]></PWTitle>
+<ParameterUI class="com.fr.form.main.parameter.FormParameterUI">
+<Layout class="com.fr.form.ui.container.WParameterLayout">
+<WidgetName name="para"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Margin top="1" left="1" bottom="1" right="1"/>
+<Border>
+<border style="0" color="-723724" type="0" borderStyle="0"/>
+<WidgetTitle>
+<O>
+<![CDATA[新建标题]]></O>
+<FRFont name="SimSun" style="0" size="72"/>
+<Position pos="0"/>
+</WidgetTitle>
+<Alpha alpha="1.0"/>
+</Border>
+<Background name="ColorBackground" color="-1118482"/>
+<LCAttr vgap="0" hgap="0" compInterval="0"/>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.parameter.FormSubmitButton">
+<WidgetName name="Search"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Text>
+<![CDATA[查询]]></Text>
+<Hotkeys>
+<![CDATA[enter]]></Hotkeys>
+</InnerWidget>
+<BoundsAttr x="623" y="60" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="LabelUnitId"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[门店:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="50" y="10" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="LabelstartCreateTime"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[日期:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="50" y="60" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.DateEditor">
+<WidgetName name="startCreateTime"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<DateAttr/>
+<widgetValue>
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=DATEDELTA(today(),-30)]]></Attributes>
+</O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="130" y="60" width="120" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="LabelendCreateTime"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[至:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="287" y="60" width="44" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.DateEditor">
+<WidgetName name="endCreateTime"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<DateAttr/>
+<widgetValue>
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=today()]]></Attributes>
+</O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="357" y="60" width="120" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.TreeComboBoxEditor">
+<WidgetName name="UnitId"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<EMSG>
+<![CDATA[门店不能为空]]></EMSG>
+<allowBlank>
+<![CDATA[false]]></allowBlank>
+<TreeAttr selectLeafOnly="false"/>
+<isAutoBuild autoBuild="false"/>
+<Dictionary class="com.fr.data.impl.TableDataDictionary">
+<FormulaDictAttr kiName="UnitID" viName="UnitName"/>
+<TableDataDictAttr>
+<TableData class="com.fr.data.impl.NameTableData">
+<Name>
+<![CDATA[门店树形]]></Name>
+</TableData>
+</TableDataDictAttr>
+</Dictionary>
+<widgetValue>
+<O>
+<![CDATA[]]></O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="130" y="10" width="120" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="LabelStoreType_c_c"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[门店类型:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="277" y="10" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.ComboBox">
+<WidgetName name="StoreType_c"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<DirectEdit>
+<![CDATA[false]]></DirectEdit>
+<CustomData>
+<![CDATA[false]]></CustomData>
+<Dictionary class="com.fr.data.impl.CustomDictionary">
+<CustomDictAttr>
+<Dict key="" value="全部"/>
+<Dict key="DirectStore" value="直营店"/>
+<Dict key="NapaStores" value="加盟店"/>
+</CustomDictAttr>
+</Dictionary>
+<widgetValue>
+<O>
+<![CDATA[全部]]></O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="357" y="10" width="120" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.ComboBox">
+<WidgetName name="ur"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Dictionary class="com.fr.data.impl.CustomDictionary">
+<CustomDictAttr>
+<Dict key="0" value="全部"/>
+<Dict key="1" value="员工"/>
+<Dict key="2" value="会员"/>
+</CustomDictAttr>
+</Dictionary>
+<widgetValue>
+<O>
+<![CDATA[全部]]></O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="583" y="10" width="120" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="Labelp2_c"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[人员类型:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="503" y="10" width="80" height="21"/>
+</Widget>
+<Sorted sorted="false"/>
+<Display display="true"/>
+<DelayDisplayContent delay="true"/>
+<Position position="0"/>
+<Design_Width design_width="960"/>
+<MobileWidgetList>
+<Widget widgetName="UnitId"/>
+<Widget widgetName="StoreType_c"/>
+<Widget widgetName="ur"/>
+<Widget widgetName="startCreateTime"/>
+<Widget widgetName="endCreateTime"/>
+</MobileWidgetList>
+<WidgetNameTagMap>
+<NameTag name="UnitId" tag="门店:"/>
+<NameTag name="StoreType_c" tag="门店类型:"/>
+<NameTag name="startCreateTime" tag="日期:"/>
+<NameTag name="ur" tag="人员类型:"/>
+<NameTag name="endCreateTime" tag="至:"/>
+</WidgetNameTagMap>
+</Layout>
+<DesignAttr width="960" height="99"/>
+</ParameterUI>
+</ReportParameterAttr>
+<StyleList>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="1" size="120" foreground="-15442262"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Top style="5" color="-16691294"/>
+<Bottom style="2" color="-4144960"/>
+</Border>
+</Style>
+<Style horizontal_alignment="0" imageLayout="1">
+<FRFont name="微软雅黑" style="1" size="72"/>
+<Background name="NullBackground"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="0" imageLayout="1">
+<FRFont name="SimSun" style="0" size="72"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="4" imageLayout="1">
+<Format class="com.fr.base.CoreDecimalFormat">
+<![CDATA[#0.##]]></Format>
+<FRFont name="SimSun" style="0" size="72"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+</StyleList>
+<DesignerVersion DesignerVersion="IAA"/>
+<PreviewType PreviewType="0"/>
+</WorkBook>

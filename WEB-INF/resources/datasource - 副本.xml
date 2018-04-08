@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DatasourceManager xmlVersion="20141222" releaseVersion="8.0.0">
+<ConnectionMap>
+<Connection name="FRDemo" class="com.fr.data.impl.JDBCDatabaseConnection">
+<DatabaseAttr originalCharsetName="UTF-8" newCharsetName="UTF-8"/>
+<JDBCDatabaseAttr url="jdbc:sqlite://${ENV_HOME}/../FRDemo.db" driver="org.sqlite.JDBC" user="" password="___" encryptPassword="true">
+<DBCPAttr/>
+</JDBCDatabaseAttr>
+</Connection>
+<Connection name="JDBC2" class="com.fr.data.impl.JDBCDatabaseConnection">
+<DatabaseAttr/>
+<JDBCDatabaseAttr url="jdbc:mysql://139.196.34.141/zmind_dev" driver="com.mysql.jdbc.Driver" user="dwetl" password="___00710029003f0060002100bb0040006f" encryptPassword="true">
+<DBCPAttr/>
+</JDBCDatabaseAttr>
+</Connection>
+<Connection name="JDBC3" class="com.fr.data.impl.JDBCDatabaseConnection">
+<DatabaseAttr/>
+<JDBCDatabaseAttr url="jdbc:sqlserver://119.29.58.16;databaseName=cpos_bs_xgx" driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" user="admin" password="___00760023006f0066001700ba004d0063004c007c003a003e0053008a004a0073007e00270064" encryptPassword="true">
+<DBCPAttr/>
+</JDBCDatabaseAttr>
+</Connection>
+<Connection name="测试环境" class="com.fr.data.impl.JDBCDatabaseConnection">
+<DatabaseAttr/>
+<JDBCDatabaseAttr url="jdbc:sqlserver://119.29.58.16;databaseName=cpos_bs_xgx" driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" user="admin" password="___00760023006f0066001700ba004d0063004c007c003a003e0053008a004a0073007e00270064" encryptPassword="true">
+<DBCPAttr/>
+</JDBCDatabaseAttr>
+</Connection>
+</ConnectionMap>
+<TableDataMap>
+<TableData name="员工信息表" class="com.fr.data.impl.DBTableData">
+<Parameters/>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[JDBC2]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[SELECT * FROM 员工信息表]]></Query>
+</TableData>
+<TableData name="用户信息表" class="com.fr.data.impl.DBTableData">
+<Parameters/>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[FRDemo]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[SELECT * FROM [userinfo]A]]></Query>
+</TableData>
+<TableData name="staff" class="com.fr.data.impl.EmbeddedTableData">
+<Parameters/>
+<DSName>
+<![CDATA[]]></DSName>
+<ColumnNames>
+<![CDATA[name,,.,,password,,.,,fullname,,.,,department,,.,,position,,.,,email]]></ColumnNames>
+<ColumnTypes>
+<![CDATA[java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String]]></ColumnTypes>
+<RowData>
+<![CDATA[NKR(5_CuhHceX@ZJr43gM]Aq\nnM\Eu%AP_K42>P72$?YOP7\=o#Y($lBHiQI$t"a4ls!$4Y!
+A)e9DcGOTBE\]A=Yg>_+LSYlOkp5/BeAeS-kAkn,>VV)GKKLq)#(]At(bH_=<NWKJ%$>Gn-^K1
+LOu99gdDH)UCKZ5V,)LPsa[ZL>DgqjE-Id,LL,R52W7$^k,;rg/lkm<NQP'Ae9(J\GT*mC:&
+l=.V^sSV"`^,,jO-AE\$#Y#4Bb(tIG$<&o0#0gbhqTN8D.q4.E?joZ%GUAr.r8SOIT=PU#RP
+M+aGPifFZB.?[F^g-V\cI'*7nY^1]Anf0WFQkBcf<q(GFG>T#Eqmr=79k7LN_nUaCbUnl8$$u
+24F,+3laI-I*l,+1gSk$9Si7"<J638/oc*V\#BDt\`Cut8qY4ZYi"EM=MsV<k<!b,SAf0sbG
+)-0`o5&UarB=n9j]A.Fi2gCF?N~
+]]></RowData>
+</TableData>
+<TableData name="上报用户" class="com.fr.data.impl.EmbeddedTableData">
+<Parameters/>
+<DSName>
+<![CDATA[]]></DSName>
+<ColumnNames>
+<![CDATA[一级用户,,.,,二级用户,,.,,三级用户]]></ColumnNames>
+<ColumnTypes>
+<![CDATA[java.lang.String,java.lang.String,java.lang.String]]></ColumnTypes>
+<RowData>
+<![CDATA[.k]A)iairdebf`Z?%*?iWWldlV9.pJ^#bc:389nqsVb^nZ6i\W>SsfoI!rr~
+]]></RowData>
+</TableData>
+<TableData name="vip" class="com.fr.data.impl.DBTableData">
+<Parameters/>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[JDBC2]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[SELECT * FROM `dim_vip` 
+WHERE VipID = '${p1}'
+  AND Gender ='${p2}']]></Query>
+</TableData>
+<TableData name="unit_src" class="com.fr.data.impl.DBTableData">
+<Parameters>
+<Parameter>
+<Attributes name="user_id"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+</Parameters>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[JDBC3]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[declare @UnitId varchar(50)
+declare @CustomerId varchar(100)
+select @UnitId=unit_id,@CustomerId=customer_id from t_user a join T_User_Role b on a.user_id = b.user_id
+where 1=1
+     and a.user_id = '${user_id}'
+	and default_flag = 1
+select * from dbo.FnGetUnitList  (@CustomerId,@UnitId,205)
+ order by treelevel]]></Query>
+</TableData>
+<TableData name="门店树形" class="com.fr.data.impl.RecursionTableData">
+<markFields>
+<![CDATA[0]]></markFields>
+<parentmarkFields>
+<![CDATA[2]]></parentmarkFields>
+<markFieldsName>
+<![CDATA[UnitID]]></markFieldsName>
+<parentmarkFieldsName>
+<![CDATA[ParrentUnitID]]></parentmarkFieldsName>
+<originalTableDataName>
+<![CDATA[unit_src]]></originalTableDataName>
+</TableData>
+<TableData name="默认门店" class="com.fr.data.impl.DBTableData">
+<Parameters>
+<Parameter>
+<Attributes name="user_id"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+</Parameters>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[JDBC3]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[SELECT DISTINCT unit_id, unit_name FROM t_unit
+ WHERE unit_id IN (
+SELECT unit_id FROM t_unit
+ WHERE unit_id IN (
+ SELECT  unit_id FROM T_User_Role
+ WHERE user_id = '${user_id}'
+   AND default_flag = 1)
+)
+]]></Query>
+</TableData>
+<TableData name="ItemCategorySrc" class="com.fr.data.impl.DBTableData">
+<Parameters>
+<Parameter>
+<Attributes name="user_id"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+</Parameters>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[JDBC3]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[declare @CategoryRootId varchar(50)
+declare @CustomerId varchar(100)
+
+select @CustomerId=customer_id 
+from t_user a 
+where 1=1
+     and a.user_id = '${user_id}' and a.user_status = 1
+
+SELECT @CategoryRootId = item_category_id
+FROM dbo.T_Item_Category c 
+WHERE c.CustomerID = @CustomerId AND c.parent_id = '-99' AND status = 1 AND c.item_category_code = 'all'
+
+SELECT a.*,b.item_category_name as CategoryName
+FROM dbo.fnGetChildCategoryByID(@CategoryRootId,1) a
+	INNER JOIN T_Item_Category b ON a.CategoryID = b.item_category_id AND b.status = 1 AND b.CustomerID = @CustomerId]]></Query>
+</TableData>
+<TableData name="商品分类树型" class="com.fr.data.impl.RecursionTableData">
+<markFields>
+<![CDATA[0]]></markFields>
+<parentmarkFields>
+<![CDATA[1]]></parentmarkFields>
+<markFieldsName>
+<![CDATA[CategoryID]]></markFieldsName>
+<parentmarkFieldsName>
+<![CDATA[ParentID]]></parentmarkFieldsName>
+<originalTableDataName>
+<![CDATA[ItemCategorySrc]]></originalTableDataName>
+</TableData>
+</TableDataMap>
+</DatasourceManager>

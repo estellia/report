@@ -1,0 +1,645 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WorkBook xmlVersion="20141222" releaseVersion="8.0.0">
+<TableDataMap>
+<TableData name="商品明细" class="com.fr.data.impl.DBTableData">
+<Parameters>
+<Parameter>
+<Attributes name="UnitId"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="startCreateTime"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="endCreateTime"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
+<Attributes name="item_category_id"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+</Parameters>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[测试环境]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[
+with temp ( dst_unit_id, src_unit_id) as(
+	select dst_unit_id,src_unit_id
+	from T_Unit_Relation
+	where dst_unit_id = '${UnitId}'
+	union all
+	select a.dst_unit_id,a.src_unit_id
+	from T_Unit_Relation a
+	inner join temp on a.src_unit_id = temp.dst_unit_id
+),category_temp (item_category_id,parent_id) as(
+		select item_category_id ,parent_id   from T_Item_Category  
+		where item_category_id='${item_category_id}' and status = 1
+		union all
+		select a.item_category_id ,a.parent_id from T_Item_Category a 
+		inner join category_temp  b on a.parent_id = b.item_category_id
+		where a.status = 1
+)
+
+select 
+    dst_unit_id ,item_category_id
+into #tmp_dst_unit_id  from temp ,category_temp;
+
+declare @parnt_id varchar(50)
+select @parnt_id = parent_id from T_Item_Category where item_category_id = '${item_category_id}' 
+----------------------可汇总数据
+SELECT    
+		 --tmp.DateCode AS  DateCode
+		 CAST(tmp.DateCode AS DATE) as  DateCode
+	    ,tmp.UnitId AS  UnitId ----门店ID
+		,t5.unit_name AS UnitName ----门店名称
+	    ,tmp.CustomerId  AS CustomerId ----客户Id
+		,tmp.ItemId AS ItemId ------ 商品id
+		,t3.item_name AS ItemName  ----商品名称
+		,t4.item_category_id AS  item_category_id -----商品类别
+		,t4.item_category_name AS  item_category_name -----商品类别
+		--,SUM(ISNULL(t6.OrderVipCount,0)) AS OrderVipCount ----下单客户数
+		,SUM(tmp.PV)  AS PV
+		,SUM(tmp.UV)  AS UV
+		,SUM(tmp.SalesQuantity)  AS SalesQuantity ----销量
+		,SUM(tmp.OrderCount) AS OrderCount  -----订单数量
+	    ,SUM(tmp.SalesAmount) AS SalesAmount  ----成交金额
+	    ,SUM(ABS(tmp.ReturnQuantity)) AS ReturnQuantity ----退货件数
+	    ,SUM(ABS(tmp.ReturnAmount)) AS ReturnAmount  ----退货金额   
+		--drop table #tmp_Agg_Product_UnitDaily_Sales
+	into #tmp_Agg_Product_UnitDaily_Sales
+		FROM  Agg_Product_UnitDaily_Sales tmp
+		LEFT JOIN T_Item t3 ON t3.item_id = tmp.ItemId AND t3.Status=1 
+		LEFT JOIN T_Item_Category T4  ON t3.item_category_id = t4.item_category_id  AND T3.CustomerId = T4.CustomerId AND t4.Status=1 --商品类别表
+		LEFT JOIN T_unit t5 ON  t5.unit_id = tmp.UnitId  AND t5.Status =1 ---门店表
+	WHERE 1=1 
+       AND tmp.DateCode >='${startCreateTime}'
+       AND tmp.DateCode < Convert(varchar(10),dateadd(d,1,'${endCreateTime}'),120)
+       AND tmp.UnitId in (select dst_unit_id from #tmp_dst_unit_id)
+       AND t4.item_category_id in (select item_category_id from #tmp_dst_unit_id )   
+	  GROUP BY
+	     tmp.UnitId    ----门店ID
+		,tmp.DateCode
+		,t5.unit_name  ----门店名称
+	    ,tmp.CustomerId   ----客户Id
+		,tmp.ItemId  ------ 商品id
+		,t3.item_name   ----商品名称
+		,t4.item_category_id  -----商品类别
+		,t4.item_category_name; -----商品类别
+--------------------------------订单客户数
+	SELECT 
+				   t6.unit_id AS  UnitId ----门店ID
+				  ,t6.customer_id  AS CustomerId ----客户Id
+				  ,t3.item_id AS ItemId ------ 商品id
+				  ,t3.item_category_id AS item_category_id
+				  ,count( DISTINCT t6.vip_no) AS OrderVipCount ----下单客户数
+				  --drop table #tmp_OrderVipCount_list
+			into #tmp_OrderVipCount_list
+			 FROM  T_InOut_Detail  t
+				 inner JOIN  (
+						SELECT 
+							    t1.sku_id AS  sku_id
+							   ,t1.barcode AS barcode
+							   ,t3.item_id  AS item_id
+							   ,t3.item_category_id
+							   ,t3.CustomerId AS CustomerId
+						FROM T_Sku	 t1  ---商品规格
+						LEFT JOIN T_Item t3  ON t3.item_id = t1.item_id 
+							WHERE t1.status =1 AND t3.status=1 
+		 )t3  ON t.sku_id=t3.sku_id --商品表
+			 left JOIN T_Inout t6 ON t6.order_id = t.order_id AND t6.actual_amount > 0  and t6.Field1='1'  ---订单主表
+				 WHERE 1=1 and t6.create_time >= '${startCreateTime}' and t6.create_time < Convert(varchar(10),dateadd(d,1,'${endCreateTime}'),120)
+				  AND t6.unit_id in (select dst_unit_id from #tmp_dst_unit_id)
+				 AND t3.item_category_id in (select item_category_id from #tmp_dst_unit_id )
+                   and  t.sku_id is not null and t.sku_id !=''
+				 and  t3.item_id is not null
+				 group by 
+					   t6.unit_id  ----门店ID
+					  ,t6.customer_id  ----客户Id
+					  ,t3.item_id ------ 商品id
+					  ,t3.item_category_id
+		--------------查询数据
+		   select 
+				a.UnitId AS  UnitId ----门店ID
+				,a.UnitName AS UnitName ----门店名称
+				,a.ItemId AS ItemId ------ 商品id
+				,a.ItemName AS ItemName  ----商品名称
+				,a.item_category_id AS  item_category_id -----商品类别
+				,a.item_category_name AS  item_category_name -----商品类别
+				,max(isnull(b.OrderVipCount,0)) AS OrderVipCount ----下单客户数
+				,sum(a.PV)  AS PV
+				,sum(a.UV)  AS UV
+				,sum(a.SalesQuantity)  AS SalesQuantity ----销量
+				,sum(a.OrderCount) AS OrderCount  -----订单数量
+				,sum(a.SalesAmount) AS SalesAmount  ----成交金额
+				,sum(isnull(a.ReturnQuantity,0)) AS ReturnQuantity ----退货件数
+				,sum(isnull(a.ReturnAmount,0)) AS ReturnAmount  ----退货金额   
+		   from  #tmp_Agg_Product_UnitDaily_Sales  a 
+		    left join #tmp_OrderVipCount_list b on a.UnitId =b.UnitId
+			AND a.CustomerId= b.CustomerId ----客户Id
+			AND a.ItemId =b.ItemId ------ 商品id
+			AND a.item_category_id =b.item_category_id
+			group by 
+
+				a.UnitId   ----门店ID
+				,a.UnitName  ----门店名称
+				,a.ItemId  ------ 商品id
+				,a.ItemName   ----商品名称
+				,a.item_category_id   -----商品类别
+				,a.item_category_name  -----商品类别
+]]></Query>
+</TableData>
+<TableData name="卡类型" class="com.fr.data.impl.DBTableData">
+<Parameters>
+<Parameter>
+<Attributes name="User_Id"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+</Parameters>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[测试环境]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[ declare @CustomerId varchar(100)
+ select @CustomerId=customer_id from t_user where user_id = '${User_Id}'
+
+select '-2' as VipCardTypeID,'全部' as VipCardTypeName
+union all
+SELECT cast(VipCardTypeID as varchar(10)) as VipCardTypeID,VipCardTypeName FROM SysVipCardType
+WHERE CustomerId = @CustomerId 
+union all
+select '-1' as VipCardTypeID,'非会员' as VipCardTypeName]]></Query>
+</TableData>
+</TableDataMap>
+<Report class="com.fr.report.worksheet.WorkSheet" name="sheet1">
+<ReportPageAttr>
+<HR F="0" T="1"/>
+<FR/>
+<HC/>
+<FC/>
+</ReportPageAttr>
+<ColumnPrivilegeControl/>
+<RowPrivilegeControl/>
+<RowHeight defaultValue="723900">
+<![CDATA[1296000,723900,723900,723900,723900,723900,723900,723900,723900,723900,723900]]></RowHeight>
+<ColumnWidth defaultValue="2743200">
+<![CDATA[4320000,4320000,7620000,2160000,2160000,2590800,0,2160000,2160000,2743200,2743200]]></ColumnWidth>
+<CellElementList>
+<C c="0" r="0" cs="9" s="0">
+<O>
+<![CDATA[商品明细]]></O>
+<PrivilegeControl/>
+<CellPageAttr/>
+<Expand extendable="1"/>
+</C>
+<C c="0" r="1" s="1">
+<O>
+<![CDATA[门店]]></O>
+<PrivilegeControl/>
+<CellPageAttr/>
+<Expand extendable="1"/>
+</C>
+<C c="1" r="1" s="1">
+<O>
+<![CDATA[商品类别]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="2" r="1" s="1">
+<O>
+<![CDATA[商品名称]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="3" r="1" s="1">
+<O>
+<![CDATA[销量]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="4" r="1" s="1">
+<O>
+<![CDATA[订单数量]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="5" r="1" s="1">
+<O>
+<![CDATA[下单客户数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="6" r="1" s="1">
+<O>
+<![CDATA[成交金额]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="7" r="1" s="1">
+<O>
+<![CDATA[退货件数]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="8" r="1" s="1">
+<O>
+<![CDATA[退货金额]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="0" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="商品明细" columnName="UnitName"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<CellPageAttr/>
+<Expand dir="0"/>
+</C>
+<C c="1" r="2" s="3">
+<O t="DSColumn">
+<Attributes dsName="商品明细" columnName="item_category_name"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="2" r="2" s="3">
+<O t="DSColumn">
+<Attributes dsName="商品明细" columnName="ItemName"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="3" r="2" s="4">
+<O t="DSColumn">
+<Attributes dsName="商品明细" columnName="SalesQuantity"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="4" r="2" s="4">
+<O t="DSColumn">
+<Attributes dsName="商品明细" columnName="OrderCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="5" r="2" s="5">
+<O t="DSColumn">
+<Attributes dsName="商品明细" columnName="OrderVipCount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="6" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="商品明细" columnName="SalesAmount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="7" r="2" s="5">
+<O t="DSColumn">
+<Attributes dsName="商品明细" columnName="ReturnQuantity"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="8" r="2" s="6">
+<O t="DSColumn">
+<Attributes dsName="商品明细" columnName="ReturnAmount"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+</CellElementList>
+<ReportAttrSet>
+<ReportSettings headerHeight="0" footerHeight="0">
+<PaperSetting>
+<Margin top="0" left="0" bottom="986400" right="2743200"/>
+</PaperSetting>
+</ReportSettings>
+<Header reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Header>
+<Footer reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Footer>
+</ReportAttrSet>
+<PrivilegeControl/>
+</Report>
+<ReportParameterAttr>
+<Attributes showWindow="true" delayPlaying="true" windowPosition="1" align="0"/>
+<PWTitle>
+<![CDATA[参数]]></PWTitle>
+<ParameterUI class="com.fr.form.main.parameter.FormParameterUI">
+<Layout class="com.fr.form.ui.container.WParameterLayout">
+<WidgetName name="para"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Margin top="1" left="1" bottom="1" right="1"/>
+<Border>
+<border style="0" color="-723724" type="0" borderStyle="0"/>
+<WidgetTitle>
+<O>
+<![CDATA[新建标题]]></O>
+<FRFont name="SimSun" style="0" size="72"/>
+<Position pos="0"/>
+</WidgetTitle>
+<Alpha alpha="1.0"/>
+</Border>
+<Background name="ColorBackground" color="-1118482"/>
+<LCAttr vgap="0" hgap="0" compInterval="0"/>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.parameter.FormSubmitButton">
+<WidgetName name="Search"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<Text>
+<![CDATA[查询]]></Text>
+<Hotkeys>
+<![CDATA[enter]]></Hotkeys>
+</InnerWidget>
+<BoundsAttr x="573" y="48" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="LabelUnitId"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[门店:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="44" y="20" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="LabelstartCreateTime"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[日期:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="44" y="76" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="Labelitem_category_id"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[商品类别:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="267" y="19" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.TreeComboBoxEditor">
+<WidgetName name="item_category_id"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<EMSG>
+<![CDATA[商品类别不能为空]]></EMSG>
+<allowBlank>
+<![CDATA[false]]></allowBlank>
+<TreeAttr selectLeafOnly="false"/>
+<isAutoBuild autoBuild="false"/>
+<Dictionary class="com.fr.data.impl.TableDataDictionary">
+<FormulaDictAttr kiName="CategoryID" viName="CategoryName"/>
+<TableDataDictAttr>
+<TableData class="com.fr.data.impl.NameTableData">
+<Name>
+<![CDATA[商品分类树型]]></Name>
+</TableData>
+</TableDataDictAttr>
+</Dictionary>
+<widgetValue>
+<O>
+<![CDATA[]]></O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="347" y="19" width="120" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.DateEditor">
+<WidgetName name="startCreateTime"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<DateAttr/>
+<widgetValue>
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=DATEDELTA(today(),-30)]]></Attributes>
+</O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="124" y="76" width="120" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="LabelendCreateTime"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[至:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="285" y="76" width="44" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.DateEditor">
+<WidgetName name="endCreateTime"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<DateAttr/>
+<widgetValue>
+<O t="Formula" class="Formula">
+<Attributes>
+<![CDATA[=today()]]></Attributes>
+</O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="347" y="76" width="120" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.TreeComboBoxEditor">
+<WidgetName name="UnitId"/>
+<WidgetAttr>
+<PrivilegeControl/>
+</WidgetAttr>
+<EMSG>
+<![CDATA[门店不能为空]]></EMSG>
+<allowBlank>
+<![CDATA[false]]></allowBlank>
+<TreeAttr selectLeafOnly="false"/>
+<isAutoBuild autoBuild="false"/>
+<Dictionary class="com.fr.data.impl.TableDataDictionary">
+<FormulaDictAttr kiName="UnitID" viName="UnitName"/>
+<TableDataDictAttr>
+<TableData class="com.fr.data.impl.NameTableData">
+<Name>
+<![CDATA[门店树形]]></Name>
+</TableData>
+</TableDataDictAttr>
+</Dictionary>
+<widgetValue>
+<O>
+<![CDATA[]]></O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="124" y="20" width="120" height="21"/>
+</Widget>
+<Sorted sorted="false"/>
+<Display display="true"/>
+<DelayDisplayContent delay="true"/>
+<Position position="0"/>
+<Design_Width design_width="960"/>
+<MobileWidgetList>
+<Widget widgetName="item_category_id"/>
+<Widget widgetName="UnitId"/>
+<Widget widgetName="startCreateTime"/>
+<Widget widgetName="endCreateTime"/>
+</MobileWidgetList>
+<WidgetNameTagMap>
+<NameTag name="UnitId" tag="门店:"/>
+<NameTag name="startCreateTime" tag="日期:"/>
+<NameTag name="endCreateTime" tag="至:"/>
+<NameTag name="item_category_id" tag="商品类别："/>
+</WidgetNameTagMap>
+</Layout>
+<DesignAttr width="960" height="140"/>
+</ParameterUI>
+</ReportParameterAttr>
+<StyleList>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="微软雅黑" style="1" size="120" foreground="-15442262"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Top style="5" color="-16691294"/>
+<Bottom style="2" color="-4144960"/>
+</Border>
+</Style>
+<Style horizontal_alignment="0" imageLayout="1">
+<FRFont name="微软雅黑" style="1" size="72"/>
+<Background name="NullBackground"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="0" imageLayout="1">
+<FRFont name="SimSun" style="0" size="72"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="SimSun" style="0" size="72"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="4" imageLayout="1">
+<Format class="com.fr.base.CoreDecimalFormat">
+<![CDATA[#0.#### ]]></Format>
+<FRFont name="SimSun" style="0" size="72"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="4" imageLayout="1">
+<Format class="com.fr.base.CoreDecimalFormat">
+<![CDATA[#0]]></Format>
+<FRFont name="SimSun" style="0" size="72"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="4" imageLayout="1">
+<Format class="com.fr.base.CoreDecimalFormat">
+<![CDATA[#0.00]]></Format>
+<FRFont name="SimSun" style="0" size="72"/>
+<Background name="ColorBackground" color="-3085062"/>
+<Border>
+<Bottom style="1" color="-1"/>
+<Right style="5" color="-1"/>
+</Border>
+</Style>
+</StyleList>
+<DesignerVersion DesignerVersion="IAA"/>
+<PreviewType PreviewType="0"/>
+</WorkBook>

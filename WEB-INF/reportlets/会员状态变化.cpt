@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WorkBook xmlVersion="20141222" releaseVersion="8.0.0">
+<TableDataMap>
+<TableData name="ds1" class="com.fr.data.impl.DBTableData">
+<Parameters/>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[测试环境]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[
+SELECT SUM(Cur_Vip_Count) Cur_Vip_Count
+	  ,SUM(Monthly_Vip_Count) Monthly_Vip_Count
+	  ,SUM(Last_MonthlVip) Last_MonthlVip
+	  ,(SUM(Monthly_Vip_Count)-SUM(Last_MonthlVip))/(SUM(Monthly_Vip_Count)*1.00) AS 环比
+FROM (
+	SELECT 
+	   (SELECT COUNT(DISTINCT VipCardCode) FROM VipCard IT WHERE IT.VipCardCode = OT.VipCardCode 
+										  AND cast(IT.MembershipTime AS DATE)>= DATEADD(DAY,-1,CAST(GETDATE() AS DATE))
+										  AND cast(IT.MembershipTime AS DATE)>= CAST(GETDATE() AS DATE)) AS Cur_Vip_Count
+	  ,(SELECT COUNT(1) FROM VipCard IT WHERE IT.VipCardCode = OT.VipCardCode 
+										  AND IT.MembershipTime >= DATEADD(Month,-1,CAST(GETDATE() AS DATE))) AS Monthly_Vip_Count
+	  ,(SELECT COUNT(1) FROM VipCard IT WHERE IT.VipCardCode = OT.VipCardCode 
+										  AND IT.MembershipTime >= DATEADD(Month,-2,CAST(GETDATE() AS DATE))
+										  AND IT.MembershipTime < DATEADD(Month,-1,CAST(GETDATE() AS DATE)) ) AS Last_MonthlVip
+  
+
+	FROM VipCard OT
+
+) T]]></Query>
+</TableData>
+</TableDataMap>
+<Report class="com.fr.report.worksheet.WorkSheet" name="sheet1">
+<ReportPageAttr>
+<HR/>
+<FR/>
+<HC/>
+<FC/>
+</ReportPageAttr>
+<ColumnPrivilegeControl/>
+<RowPrivilegeControl/>
+<RowHeight defaultValue="723900">
+<![CDATA[1152000,1152000,1152000,723900,723900,723900,723900,723900,723900,723900,723900]]></RowHeight>
+<ColumnWidth defaultValue="2743200">
+<![CDATA[5638800,2743200,2743200,2743200,2743200,2743200,2743200,2743200,2743200,2743200,2743200]]></ColumnWidth>
+<CellElementList>
+<C c="0" r="0" s="0">
+<O>
+<![CDATA[昨日新增：]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="0" s="1">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="Cur_Vip_Count"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="0" r="1" s="0">
+<O>
+<![CDATA[本月新增:]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="1" s="1">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="Monthly_Vip_Count"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="0" r="2" s="0">
+<O>
+<![CDATA[环比：]]></O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="2" s="2">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="环比"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+</CellElementList>
+<ReportAttrSet>
+<ReportSettings headerHeight="0" footerHeight="0">
+<PaperSetting/>
+</ReportSettings>
+</ReportAttrSet>
+<PrivilegeControl/>
+</Report>
+<ReportParameterAttr>
+<Attributes showWindow="true" delayPlaying="true" windowPosition="1" align="0"/>
+<PWTitle>
+<![CDATA[参数]]></PWTitle>
+</ReportParameterAttr>
+<StyleList>
+<Style horizontal_alignment="4" imageLayout="1">
+<FRFont name="SimSun" style="1" size="72" foreground="-4144960"/>
+<Background name="NullBackground"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="SimSun" style="1" size="72" foreground="-9055565"/>
+<Background name="NullBackground"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<Format class="com.fr.base.CoreDecimalFormat">
+<![CDATA[#0%]]></Format>
+<FRFont name="SimSun" style="1" size="72" foreground="-9055565"/>
+<Background name="NullBackground"/>
+<Border/>
+</Style>
+</StyleList>
+<DesignerVersion DesignerVersion="IAA"/>
+<PreviewType PreviewType="0"/>
+</WorkBook>

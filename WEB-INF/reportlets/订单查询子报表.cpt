@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WorkBook xmlVersion="20141222" releaseVersion="8.0.0">
+<TableDataMap>
+<TableData name="ds1" class="com.fr.data.impl.DBTableData">
+<Parameters/>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[测试环境]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[SELECT Field10 AS OrderStatus
+	  ,sum(CASE WHEN Field10 = '已完成' THEN 1 ELSE 0 END)
+	   AS 已完成
+	  ,sum(CASE WHEN Field10 in ('未审核','未审批') THEN 1 ELSE 0 END)
+	   AS 待审核订单
+
+	  ,sum(CASE WHEN Field10 in ('未发货') THEN 1 ELSE 0 END)
+	   AS 未发货
+	  ,sum(CASE WHEN Field10 in ('已取消') THEN 1 ELSE 0 END)
+	   AS 已取消
+
+  
+	    FROM t_inout 
+WHERE Order_Date BETWEEN DATEADD(MONTH,-1,GETDATE()) AND GETDATE()
+GROUP BY Field10]]></Query>
+</TableData>
+</TableDataMap>
+<Report class="com.fr.report.worksheet.WorkSheet" name="sheet1">
+<ReportPageAttr>
+<HR/>
+<FR/>
+<HC/>
+<FC/>
+</ReportPageAttr>
+<ColumnPrivilegeControl/>
+<RowPrivilegeControl/>
+<RowHeight defaultValue="723900">
+<![CDATA[723900,576000,2160000,723900,576000,2160000,723900,723900,723900,723900,723900]]></RowHeight>
+<ColumnWidth defaultValue="2743200">
+<![CDATA[576000,3024000,576000,3024000,576000,3024000,2743200,2743200,2743200,2743200,2743200]]></ColumnWidth>
+<CellElementList>
+<C c="0" r="0">
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="1" s="0">
+<O>
+<![CDATA[已完成]]></O>
+<PrivilegeControl/>
+</C>
+<C c="3" r="1" s="1">
+<O>
+<![CDATA[待审核]]></O>
+<PrivilegeControl/>
+</C>
+<C c="5" r="1" s="2">
+<O>
+<![CDATA[未发货]]></O>
+<PrivilegeControl/>
+</C>
+<C c="1" r="2" s="3">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="已完成"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.SummaryGrouper">
+<FN>
+<![CDATA[com.fr.data.util.function.SumFunction]]></FN>
+</RG>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="3" r="2" s="4">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="待审核订单"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.SummaryGrouper">
+<FN>
+<![CDATA[com.fr.data.util.function.SumFunction]]></FN>
+</RG>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="5" r="2" s="5">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="未发货"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.SummaryGrouper">
+<FN>
+<![CDATA[com.fr.data.util.function.SumFunction]]></FN>
+</RG>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+<C c="1" r="4" s="6">
+<O>
+<![CDATA[已取消]]></O>
+<PrivilegeControl/>
+</C>
+<C c="1" r="5" s="7">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="已取消"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.SummaryGrouper">
+<FN>
+<![CDATA[com.fr.data.util.function.SumFunction]]></FN>
+</RG>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand/>
+</C>
+</CellElementList>
+<ReportAttrSet>
+<ReportSettings headerHeight="0" footerHeight="0">
+<PaperSetting/>
+</ReportSettings>
+<Header reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Header>
+<Footer reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Footer>
+</ReportAttrSet>
+<PrivilegeControl/>
+</Report>
+<ReportParameterAttr>
+<Attributes showWindow="true" delayPlaying="true" windowPosition="1" align="0"/>
+<PWTitle>
+<![CDATA[参数]]></PWTitle>
+</ReportParameterAttr>
+<StyleList>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="SimSun" style="1" size="72" foreground="-1"/>
+<Background name="ColorBackground" color="-6697984"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="SimSun" style="1" size="72" foreground="-1"/>
+<Background name="ColorBackground" color="-16724737"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="SimSun" style="1" size="72" foreground="-1"/>
+<Background name="ColorBackground" color="-16744320"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="0" imageLayout="1">
+<FRFont name="SimSun" style="1" size="88" foreground="-1"/>
+<Background name="ColorBackground" color="-6697984"/>
+<Border>
+<Top style="1" color="-1"/>
+<Bottom color="-1"/>
+<Left color="-1"/>
+<Right color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="0" imageLayout="1">
+<FRFont name="SimSun" style="1" size="88" foreground="-1"/>
+<Background name="ColorBackground" color="-16724737"/>
+<Border>
+<Top style="1" color="-1"/>
+<Bottom color="-1"/>
+<Left color="-1"/>
+<Right color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="0" imageLayout="1">
+<FRFont name="SimSun" style="1" size="88" foreground="-1"/>
+<Background name="ColorBackground" color="-16744320"/>
+<Border>
+<Top style="1" color="-1"/>
+<Bottom color="-1"/>
+<Left color="-1"/>
+<Right color="-1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="2" imageLayout="1">
+<FRFont name="SimSun" style="1" size="72" foreground="-1"/>
+<Background name="ColorBackground" color="-16777088"/>
+<Border/>
+</Style>
+<Style horizontal_alignment="0" imageLayout="1">
+<FRFont name="SimSun" style="1" size="88" foreground="-1"/>
+<Background name="ColorBackground" color="-16777088"/>
+<Border>
+<Top style="1" color="-1"/>
+<Bottom color="-1"/>
+<Left color="-1"/>
+<Right color="-1"/>
+</Border>
+</Style>
+</StyleList>
+<DesignerVersion DesignerVersion="IAA"/>
+<PreviewType PreviewType="0"/>
+</WorkBook>
